@@ -1,6 +1,15 @@
-# Project Horus Telemetry Decododer
+# Project Horus Telemetry Decoder
+
+Telemetry demodulator for the following modems in use by Project Horus
+* Horus Binary Modes
+  * v1 - Legacy 22 byte mode, Golay FEC
+  * v2 - 16/32-byte modes, LDPC FEC
+* RTTY (7N2 only)
+
 
 Written by Mark Jessop <vk5qi@rfhead.net>
+
+**Note: This is very much a work in progress!**
 
 
 ### TODO LIST - Important Stuff
@@ -8,10 +17,12 @@ Written by Mark Jessop <vk5qi@rfhead.net>
 * Integrate Horus Modems (need help from @xssfox!)
 * Basic display of decoded data (RTTY or HEX data for binary)
 * Decode horus binary data (move horusbinary.py into a library?)
-* Upload telemetry to Habitat, with upload status.
+* Upload telemetry to Habitat, with upload status
+* Better build system (build horuslib as part of package build?)
+* Windows binary
 
 ### TODO LIST - Extras
-* Save/Reload settings to file.
+* Save/Reload settings to file
 * UDP input from GQRX
 * Waterfall Display
 
