@@ -146,11 +146,11 @@ widgets['spectrumPlotData']= widgets['spectrumPlot'].plot([0])
 widgets['spectrumPlot'].setLabel('left', "Power (dBFs)")
 widgets['spectrumPlot'].setLabel('bottom', "Frequency", units="Hz")
 widgets['spectrumPlot'].setXRange(100,4000)
-widgets['spectrumPlot'].setYRange(-110,-20)
+widgets['spectrumPlot'].setYRange(-100,-20)
 widgets['spectrumPlot'].setLimits(xMin=0, xMax=4000, yMin=-120, yMax=0)
 d1.addWidget(widgets['spectrumPlot'])
 
-widgets['spectrumPlotRange'] = [-110, -20]
+widgets['spectrumPlotRange'] = [-100, -20]
 
 # Waterfall - TBD
 w3 = pg.LayoutWidget()
@@ -206,7 +206,7 @@ def handle_fft_update(data):
     # Store new max
     widgets['spectrumPlotRange'][1] = _new_max
 
-    widgets['spectrumPlot'].setYRange(-110, min(0,_new_max)+20)
+    widgets['spectrumPlot'].setYRange(widgets['spectrumPlotRange'][0], min(0,_new_max)+20)
 
 
 
@@ -220,7 +220,7 @@ def add_fft_update(data):
 
 
 def start_decoding():
-    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running
+    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running, fft_update_queue, status_update_queue
 
     if not running:
         # Grab settings off widgets
@@ -264,6 +264,9 @@ def start_decoding():
             fft_process.stop()
         except Exception as e:
             logging.exception("Could not stop fft processing.", exc_info=e)
+
+        fft_update_queue = Queue(256)
+        status_update_queue = Queue(256)
 
         widgets['startDecodeButton'].setText('Start')
         running = False

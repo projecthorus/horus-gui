@@ -3,7 +3,17 @@
 Written by Mark Jessop <vk5qi@rfhead.net>
 
 
+### TODO LIST - Important Stuff
+* Audio input via pyAudio and spectrum display. - DONE
+* Integrate Horus Modems (need help from @xssfox!)
+* Basic display of decoded data (RTTY or HEX data for binary)
+* Decode horus binary data (move horusbinary.py into a library?)
+* Upload telemetry to Habitat, with upload status.
 
+### TODO LIST - Extras
+* Save/Reload settings to file.
+* UDP input from GQRX
+* Waterfall Display
 
 ## Usage
 
