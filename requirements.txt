@@ -1,0 +1,7 @@
+numpy
+scipy
+pyaudio
+requests
+crcmod
+PyQt5
+pyqtgraph
