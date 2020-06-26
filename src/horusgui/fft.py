@@ -60,8 +60,6 @@ class FFTProcess(object):
         # Calculate FFT
         _fft = 20*np.log10(np.abs(np.fft.fftshift(np.fft.fft(raw_data * self.window)))) - 20*np.log10(self.nfft)
 
-        logging.debug("Performed FFT.")
-
         if self.callback != None:
             self.callback(
                 {

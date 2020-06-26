@@ -13,6 +13,7 @@ if sys.version_info < (3, 0):
     print("This script requires Python 3!")
     sys.exit(1)
 
+import datetime
 import glob
 import logging
 import pyqtgraph as pg
@@ -26,16 +27,13 @@ from .widgets import *
 from .audio import *
 from .fft import *
 from .modem import *
-
+from .config import *
+from . import __version__
 
 # Setup Logging
 logging.basicConfig(
     format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
-
-# Defaults
-
-DEFAULT_CALLSIGN = 'N0CALL'
 
 # Global widget store
 widgets = {}
@@ -69,25 +67,43 @@ win.setCentralWidget(area)
 win.setWindowTitle("Horus Telemetry GUI")
 
 # Create multiple dock areas, for displaying our data.
-d0 = Dock("Controls", size=(300,800))
-d1 = Dock("Spectrum", size=(800,500))
-d2 = Dock("Waterfall", size=(800,200))
-d3 = Dock("Telemetry",size=(800,200))
-area.addDock(d0, "left")
-area.addDock(d1, "right", d0)
+d0 = Dock("Audio", size=(300,50))
+d0_modem = Dock("Modem", size=(300,80))
+d0_habitat = Dock("Habitat", size=(300,200))
+d0_other = Dock("Other", size=(300,100))
+d1 = Dock("Spectrum", size=(800,400))
+d2 = Dock("Modem Stats", size=(800,300))
+d3 = Dock("Data",size=(800,50))
+d4 = Dock("Log",size=(800,150))
+# Arrange docks.
+area.addDock(d0)
+area.addDock(d1, 'right', d0)
+area.addDock(d0_modem, "bottom", d0)
+area.addDock(d0_habitat, "bottom", d0_modem)
+area.addDock(d0_other, "below", d0_habitat)
 area.addDock(d2, "bottom", d1)
 area.addDock(d3, "bottom", d2)
-
+area.addDock(d4, "bottom", d3)
+d0_habitat.raiseDock()
 
 
 # Controls
-w1 = pg.LayoutWidget()
+w1_audio = pg.LayoutWidget()
 # TNC Connection
 widgets['audioDeviceLabel'] = QtGui.QLabel("<b>Audio Device:</b>")
 widgets['audioDeviceSelector'] = QtGui.QComboBox()
 
 widgets['audioSampleRateLabel'] = QtGui.QLabel("<b>Sample Rate (Hz):</b>")
 widgets['audioSampleRateSelector'] = QtGui.QComboBox()
+
+w1_audio.addWidget(widgets['audioDeviceLabel'], 0, 0, 1, 1)
+w1_audio.addWidget(widgets['audioDeviceSelector'], 0, 1, 1, 1)
+w1_audio.addWidget(widgets['audioSampleRateLabel'], 1, 0, 1, 1)
+w1_audio.addWidget(widgets['audioSampleRateSelector'], 1, 1, 1, 1)
+
+d0.addWidget(w1_audio)
+
+w1_modem = pg.LayoutWidget()
 
 # Modem Parameters
 widgets['horusModemLabel'] = QtGui.QLabel("<b>Mode:</b>")
@@ -105,37 +121,63 @@ widgets['horusMaskSpacingEntry'] = QtGui.QLineEdit("270")
 # Start/Stop
 widgets['startDecodeButton'] = QtGui.QPushButton("Start")
 
+w1_modem.addWidget(widgets['horusModemLabel'], 0, 0, 1, 1)
+w1_modem.addWidget(widgets['horusModemSelector'], 0, 1, 1, 1)
+w1_modem.addWidget(widgets['horusModemRateLabel'], 1, 0, 1, 1)
+w1_modem.addWidget(widgets['horusModemRateSelector'], 1, 1, 1, 1)
+w1_modem.addWidget(widgets['horusMaskEstimatorLabel'], 2, 0, 1, 1)
+w1_modem.addWidget(widgets['horusMaskEstimatorSelector'], 2, 1, 1, 1)
+w1_modem.addWidget(widgets['horusMaskSpacingLabel'], 3, 0, 1, 1)
+w1_modem.addWidget(widgets['horusMaskSpacingEntry'], 3, 1, 1, 1)
+w1_modem.addWidget(widgets['startDecodeButton'], 4, 0, 2, 2)
+
+d0_modem.addWidget(w1_modem)
+
+
+w1_habitat = pg.LayoutWidget()
 # Listener Information
+widgets['habitatHeading'] = QtGui.QLabel("<b>Habitat Settings</b>")
+widgets['habitatUploadLabel'] = QtGui.QLabel("<b>Enable Habitat Upload:</b>")
+widgets['habitatUploadSelector'] = QtGui.QCheckBox()
+widgets['habitatUploadSelector'].setChecked(True)
 widgets['userCallLabel'] = QtGui.QLabel("<b>Callsign:</b>")
-widgets['userCallEntry'] = QtGui.QLineEdit(DEFAULT_CALLSIGN)
+widgets['userCallEntry'] = QtGui.QLineEdit("N0CALL")
 widgets['userCallEntry'].setMaxLength(20)
+widgets['userLocationLabel'] = QtGui.QLabel("<b>Lat/Lon:</b>")
+widgets['userLatEntry'] = QtGui.QLineEdit("0.0")
+widgets['userLonEntry'] = QtGui.QLineEdit("0.0")
+widgets['userAntennaLabel'] = QtGui.QLabel("<b>Antenna:</b>")
+widgets['userAntennaEntry'] = QtGui.QLineEdit("")
+widgets['userRadioLabel'] = QtGui.QLabel("<b>Radio:</b>")
+widgets['userRadioEntry'] = QtGui.QLineEdit("Horus-GUI " + __version__)
 
+w1_habitat.addWidget(widgets['habitatUploadLabel'],0, 0, 1, 1)
+w1_habitat.addWidget(widgets['habitatUploadSelector'],0, 1, 1, 1)
+w1_habitat.addWidget(widgets['userCallLabel'], 1, 0, 1, 1)
+w1_habitat.addWidget(widgets['userCallEntry'], 1, 1, 1, 2)
+w1_habitat.addWidget(widgets['userLocationLabel'], 2, 0, 1, 1)
+w1_habitat.addWidget(widgets['userLatEntry'], 2, 1, 1, 1)
+w1_habitat.addWidget(widgets['userLonEntry'], 2, 2, 1, 1)
+w1_habitat.addWidget(widgets['userAntennaLabel'], 3, 0, 1, 1)
+w1_habitat.addWidget(widgets['userAntennaEntry'], 3, 1, 1, 2)
+w1_habitat.addWidget(widgets['userRadioLabel'], 4, 0, 1, 1)
+w1_habitat.addWidget(widgets['userRadioEntry'], 4, 1, 1, 2)
 
+d0_habitat.addWidget(w1_habitat)
 
-# Layout the Control pane.
-# Yes this is horrible. Don't @ me.
-w1.addWidget(widgets['audioDeviceLabel'], 0, 0, 1, 1)
-w1.addWidget(widgets['audioDeviceSelector'], 0, 1, 1, 1)
-w1.addWidget(widgets['audioSampleRateLabel'], 1, 0, 1, 1)
-w1.addWidget(widgets['audioSampleRateSelector'], 1, 1, 1, 1)
-w1.addWidget(QHLine(), 2, 0, 1, 2)
-w1.addWidget(widgets['horusModemLabel'], 3, 0, 1, 1)
-w1.addWidget(widgets['horusModemSelector'], 3, 1, 1, 1)
-w1.addWidget(widgets['horusModemRateLabel'], 4, 0, 1, 1)
-w1.addWidget(widgets['horusModemRateSelector'], 4, 1, 1, 1)
-w1.addWidget(widgets['horusMaskEstimatorLabel'], 5, 0, 1, 1)
-w1.addWidget(widgets['horusMaskEstimatorSelector'], 5, 1, 1, 1)
-w1.addWidget(widgets['horusMaskSpacingLabel'], 6, 0, 1, 1)
-w1.addWidget(widgets['horusMaskSpacingEntry'], 6, 1, 1, 1)
-w1.addWidget(QHLine(), 7, 0, 1, 2)
-w1.addWidget(widgets['startDecodeButton'], 8, 0, 1, 2)
-w1.addWidget(QHLine(), 9, 0, 1, 2)
-w1.addWidget(widgets['userCallLabel'], 10, 0, 1, 1)
-w1.addWidget(widgets['userCallEntry'], 10, 1, 1, 1)
+w1_other = pg.LayoutWidget()
+widgets['horusUploadLabel'] = QtGui.QLabel("<b>Enable Horus UDP Output:</b>")
+widgets['horusUploadSelector'] = QtGui.QCheckBox()
+widgets['horusUploadSelector'].setChecked(True)
+widgets['horusUDPLabel'] = QtGui.QLabel("<b>Horus UDP Port:</b>")
+widgets['horusUDPEntry'] = QtGui.QLineEdit("55672")
+widgets['horusUDPEntry'].setMaxLength(5)
 
-w1.layout.setSpacing(1)
-d0.addWidget(w1)
-
+w1_other.addWidget(widgets['horusUploadLabel'], 0, 0, 1, 1)
+w1_other.addWidget(widgets['horusUploadSelector'], 0, 1, 1, 1)
+w1_other.addWidget(widgets['horusUDPLabel'], 1, 0, 1, 1)
+w1_other.addWidget(widgets['horusUDPEntry'], 1, 1, 1, 1)
+d0_other.addWidget(w1_other)
 
 # Spectrum Display
 widgets['spectrumPlot'] = pg.PlotWidget(title="Spectra")
@@ -148,19 +190,53 @@ widgets['spectrumPlot'].setLabel('bottom', "Frequency", units="Hz")
 widgets['spectrumPlot'].setXRange(100,4000)
 widgets['spectrumPlot'].setYRange(-100,-20)
 widgets['spectrumPlot'].setLimits(xMin=0, xMax=4000, yMin=-120, yMax=0)
+
+# Frequency Estiator Outputs
+widgets['estimatorLines'] = [
+    pg.InfiniteLine(pos=-1000,pen=pg.mkPen(color='w', width=2, style=QtCore.Qt.DashLine), label='F1'),
+    pg.InfiniteLine(pos=-1000,pen=pg.mkPen(color='w', width=2, style=QtCore.Qt.DashLine), label='F2'),
+    pg.InfiniteLine(pos=-1000,pen=pg.mkPen(color='w', width=2, style=QtCore.Qt.DashLine), label='F3'),
+    pg.InfiniteLine(pos=-1000,pen=pg.mkPen(color='w', width=2, style=QtCore.Qt.DashLine), label='F4')
+]
+for _line in widgets['estimatorLines']:
+    widgets['spectrumPlot'].addItem(_line)
+
 d1.addWidget(widgets['spectrumPlot'])
 
 widgets['spectrumPlotRange'] = [-100, -20]
 
 # Waterfall - TBD
 w3 = pg.LayoutWidget()
+widgets['snrPlot'] = pg.PlotWidget(title="SNR")
+widgets['snrPlot'].setLabel("left", "SNR (dB)")
+widgets['snrPlot'].setLabel("bottom", "Time (s)")
+widgets['snrPlot'].setXRange(-60,0)
+widgets['snrPlot'].setYRange(-10,30)
+widgets['snrPlot'].setLimits(xMin=0, xMax=60, yMin=-100, yMax=40)
+widgets['snrPlotRange'] = [-10, 30]
+
+widgets['eyeDiagramPlot'] = pg.PlotWidget(title="Eye Diagram")
+
+
+w3.addWidget(widgets['snrPlot'],0,0)
+w3.addWidget(widgets['eyeDiagramPlot'],0,1)
+
 d2.addWidget(w3)
 
 # Telemetry Data
 w4 = pg.LayoutWidget()
-rxImageStatus = QtGui.QLabel("No Data Yet.")
-w4.addWidget(rxImageStatus, 0, 0, 1, 1)
+widgets['latestSentenceLabel'] = QtGui.QLabel("<b>Latest Sentence:</b>")
+widgets['latestSentenceData'] = QtGui.QLabel("NO DATA")
+widgets['latestSentenceData'].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
+w4.addWidget(widgets['latestSentenceLabel'], 0, 0, 1, 1)
+w4.addWidget(widgets['latestSentenceData'], 0, 1, 1, 6)
 d3.addWidget(w4)
+
+w5 = pg.LayoutWidget()
+widgets['console'] = QtWidgets.QPlainTextEdit()
+widgets['console'].setReadOnly(True)
+w5.addWidget(widgets['console'])
+d4.addWidget(w5)
 
 # Resize window to final resolution, and display.
 logging.info("Starting GUI.")
@@ -187,6 +263,11 @@ def update_modem_settings():
     populate_modem_settings(widgets)
 
 widgets['horusModemSelector'].currentIndexChanged.connect(update_modem_settings)
+
+
+# Read in configuration file settings
+read_config(widgets)
+
 
 
 def handle_fft_update(data):
@@ -252,6 +333,7 @@ def start_decoding():
 
         widgets['startDecodeButton'].setText('Stop')
         running = True
+        logging.info("Started Audio Processing.")
 
     else:
 
@@ -270,6 +352,8 @@ def start_decoding():
 
         widgets['startDecodeButton'].setText('Start')
         running = False
+
+        logging.info("Stopped Audio Processing.")
 
 
 widgets['startDecodeButton'].clicked.connect(start_decoding)
@@ -296,21 +380,41 @@ gui_update_timer.timeout.connect(processQueues)
 gui_update_timer.start(100)
 
 
+class ConsoleHandler(logging.Handler):
+    """ Logging handler to write to the GUI console """
+    def __init__(self, consolewidget):
+        logging.Handler.__init__(self)
+        self.consolewidget = consolewidget
+
+    def emit(self, record):
+        _time = datetime.datetime.now()
+        _text = f"{record.levelname} {_time.strftime('%H:%M:%S')}:\t{record.msg}"
+        self.consolewidget.appendPlainText(_text)
+
+# Add console handler to top level logger.
+console_handler = ConsoleHandler(widgets['console'])
+logging.getLogger().addHandler(console_handler)
+
+
+logging.info("Started GUI.")
+
+
 # Main
 def main():
     # Start the Qt Loop
     if (sys.flags.interactive != 1) or not hasattr(QtCore, "PYQT_VERSION"):
         QtGui.QApplication.instance().exec_()
+        save_config(widgets)
     
     try:
         audio_stream.stop()
     except Exception as e:
-        logging.exception("Could not stop audio stream.", exc_info=e)
+        pass
     
     try:
         fft_process.stop()
     except Exception as e:
-        logging.exception("Could not stop fft processing.", exc_info=e)
+        pass
 
 
 if __name__ == "__main__":
