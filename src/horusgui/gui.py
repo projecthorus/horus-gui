@@ -402,7 +402,7 @@ class ConsoleHandler(logging.Handler):
 
     def emit(self, record):
         _time = datetime.datetime.now()
-        _text = f"{record.levelname} {_time.strftime('%H:%M:%S')}:\t{record.msg}"
+        _text = f"{_time.strftime('%H:%M:%S')} [{record.levelname}]  {record.msg}"
         self.consolewidget.appendPlainText(_text)
 
 

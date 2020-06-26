@@ -16,15 +16,15 @@ Written by Mark Jessop <vk5qi@rfhead.net>
 * Audio input via pyAudio and spectrum display. - DONE
 * Integrate Horus Modems (need help from @xssfox!)
 * Basic display of decoded data (RTTY or HEX data for binary)
+* Save/Reload settings to file - Initial pass done.
 * Decode horus binary data (move horusbinary.py into a library?)
 * Upload telemetry to Habitat, with upload status
 * Better build system (build horuslib as part of package build?)
 * Windows binary
 
 ### TODO LIST - Extras
-* Save/Reload settings to file
 * UDP input from GQRX
-* Waterfall Display
+* Waterfall Display 
 
 ## Usage
 
