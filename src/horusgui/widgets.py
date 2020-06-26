@@ -7,4 +7,3 @@ class QHLine(QtGui.QFrame):
         super(QHLine, self).__init__()
         self.setFrameShape(QtGui.QFrame.HLine)
         self.setFrameShadow(QtGui.QFrame.Sunken)
-

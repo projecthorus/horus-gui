@@ -18,13 +18,13 @@ help:
 # help: style.check                    - perform code format compliance check
 .PHONY: style.check
 style.check:
-	@black src/horusgui apps setup.py --check
+	@black src/horusgui setup.py --check
 
 
 # help: style                          - perform code format compliance changes
 .PHONY: style
 style:
-	@black src/horusgui apps setup.py
+	@black src/horusgui setup.py
 
 
 # help: test                           - run tests
