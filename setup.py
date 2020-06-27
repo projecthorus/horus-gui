@@ -40,11 +40,10 @@ if __name__ == "__main__":
             "Intended Audience :: Developers",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
-        ]
-        # TODO: Deal with entry points.
-        # entry_points={
-        #     "console_scripts": [
-        #         "hfssdv=hfssdv.gui.main",
-        #     ]
-        # },
+        ],
+        entry_points={
+            "console_scripts": [
+                "horus-gui=horusgui.gui",
+            ]
+        }
     )

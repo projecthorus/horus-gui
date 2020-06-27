@@ -2,7 +2,6 @@
 import logging
 import time
 import numpy as np
-import scipy.signal
 from queue import Queue
 from threading import Thread
 
@@ -40,7 +39,7 @@ class FFTProcess(object):
 
     def init_window(self):
         """ Initialise Window functions and FFT scales. """
-        self.window = scipy.signal.blackmanharris(self.nfft)
+        self.window = np.hanning(self.nfft)
         self.fft_scale = np.fft.fftshift(np.fft.fftfreq(self.nfft)) * self.fs
         self.mask = (self.fft_scale > self.range[0]) & (self.fft_scale < self.range[1])
 

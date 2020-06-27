@@ -160,6 +160,7 @@ w1_habitat.addWidget(widgets["userAntennaLabel"], 3, 0, 1, 1)
 w1_habitat.addWidget(widgets["userAntennaEntry"], 3, 1, 1, 2)
 w1_habitat.addWidget(widgets["userRadioLabel"], 4, 0, 1, 1)
 w1_habitat.addWidget(widgets["userRadioEntry"], 4, 1, 1, 2)
+w1_habitat.layout.setRowStretch(5,1)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -175,6 +176,8 @@ w1_other.addWidget(widgets["horusUploadLabel"], 0, 0, 1, 1)
 w1_other.addWidget(widgets["horusUploadSelector"], 0, 1, 1, 1)
 w1_other.addWidget(widgets["horusUDPLabel"], 1, 0, 1, 1)
 w1_other.addWidget(widgets["horusUDPEntry"], 1, 1, 1, 1)
+w1_other.layout.setRowStretch(5,1)
+
 d0_other.addWidget(w1_other)
 
 # Spectrum Display
@@ -182,12 +185,6 @@ widgets["spectrumPlot"] = pg.PlotWidget(title="Spectra")
 widgets["spectrumPlot"].setLabel("left", "Power (dB)")
 widgets["spectrumPlot"].setLabel("bottom", "Frequency (Hz)")
 widgets["spectrumPlotData"] = widgets["spectrumPlot"].plot([0])
-
-widgets["spectrumPlot"].setLabel("left", "Power (dBFs)")
-widgets["spectrumPlot"].setLabel("bottom", "Frequency", units="Hz")
-widgets["spectrumPlot"].setXRange(100, 4000)
-widgets["spectrumPlot"].setYRange(-100, -20)
-widgets["spectrumPlot"].setLimits(xMin=0, xMax=4000, yMin=-120, yMax=0)
 
 # Frequency Estiator Outputs
 widgets["estimatorLines"] = [
@@ -214,6 +211,12 @@ widgets["estimatorLines"] = [
 ]
 for _line in widgets["estimatorLines"]:
     widgets["spectrumPlot"].addItem(_line)
+
+widgets["spectrumPlot"].setLabel("left", "Power (dBFs)")
+widgets["spectrumPlot"].setLabel("bottom", "Frequency", units="Hz")
+widgets["spectrumPlot"].setXRange(100, 4000)
+widgets["spectrumPlot"].setYRange(-100, -20)
+widgets["spectrumPlot"].setLimits(xMin=100, xMax=4000, yMin=-120, yMax=0)
 
 d1.addWidget(widgets["spectrumPlot"])
 
@@ -330,8 +333,10 @@ def start_decoding():
         # TODO: Grab horus data here.
 
         # Init FFT Processor
+        NFFT = 2**14
+        STRIDE = 2**13
         fft_process = FFTProcess(
-            nfft=8192, stride=4096, fs=_sample_rate, callback=add_fft_update
+            nfft=NFFT, stride=STRIDE, fs=_sample_rate, callback=add_fft_update
         )
 
         # TODO: Setup modem here
