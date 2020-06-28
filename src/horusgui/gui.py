@@ -28,6 +28,7 @@ from .audio import *
 from .fft import *
 from .modem import *
 from .config import *
+from .habitat import *
 from . import __version__
 
 # Setup Logging
@@ -47,6 +48,7 @@ audio_devices = {}
 audio_stream = None
 fft_process = None
 horus_modem = None
+habitat_uploader = None
 
 # Global running indicator
 running = False
@@ -148,6 +150,7 @@ widgets["userAntennaLabel"] = QtGui.QLabel("<b>Antenna:</b>")
 widgets["userAntennaEntry"] = QtGui.QLineEdit("")
 widgets["userRadioLabel"] = QtGui.QLabel("<b>Radio:</b>")
 widgets["userRadioEntry"] = QtGui.QLineEdit("Horus-GUI " + __version__)
+widgets["habitatUploadPosition"] = QtGui.QPushButton("Upload Position")
 
 w1_habitat.addWidget(widgets["habitatUploadLabel"], 0, 0, 1, 1)
 w1_habitat.addWidget(widgets["habitatUploadSelector"], 0, 1, 1, 1)
@@ -160,7 +163,8 @@ w1_habitat.addWidget(widgets["userAntennaLabel"], 3, 0, 1, 1)
 w1_habitat.addWidget(widgets["userAntennaEntry"], 3, 1, 1, 2)
 w1_habitat.addWidget(widgets["userRadioLabel"], 4, 0, 1, 1)
 w1_habitat.addWidget(widgets["userRadioEntry"], 4, 1, 1, 2)
-w1_habitat.layout.setRowStretch(5,1)
+w1_habitat.addWidget(widgets["habitatUploadPosition"], 5, 0, 1, 3)
+w1_habitat.layout.setRowStretch(6,1)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -289,6 +293,38 @@ widgets["horusModemSelector"].currentIndexChanged.connect(update_modem_settings)
 # Read in configuration file settings
 read_config(widgets)
 
+# Start Habitat Uploader
+habitat_uploader = HabitatUploader(
+    user_callsign = widgets["userCallEntry"].text(),
+    listener_lat = widgets["userLatEntry"].text(),
+    listener_lon = widgets["userLonEntry"].text(),
+    listener_radio = widgets["userRadioEntry"].text(),
+    listener_antenna = widgets["userAntennaEntry"].text()
+)
+
+def habitat_position_reupload():
+    """ Trigger a re-upload of user position information """
+    global widgets, habitat_uploader
+
+    habitat_uploader.user_callsign = widgets["userCallEntry"].text()
+    habitat_uploader.listener_lat = widgets["userLatEntry"].text()
+    habitat_uploader.listener_lon = widgets["userLonEntry"].text()
+    habitat_uploader.listener_radio = widgets["userRadioEntry"].text()
+    habitat_uploader.listener_antenna = widgets["userAntennaEntry"].text()
+    habitat_uploader.trigger_position_upload()
+
+widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
+
+def habitat_inhibit():
+    """ Update the Habitat inhibit flag """
+    global widgets, habitat_uploader
+    habitat_uploader.inhibit = not widgets[
+            "habitatUploadSelector"
+        ].isChecked()
+    logging.debug(f"Updated Habitat Inhibit state: {habitat_uploader.inhibit}")
+
+widgets["habitatUploadSelector"].clicked.connect(habitat_inhibit)
+
 
 def handle_fft_update(data):
     """ Handle a new FFT update """
@@ -409,6 +445,8 @@ class ConsoleHandler(logging.Handler):
         _time = datetime.datetime.now()
         _text = f"{_time.strftime('%H:%M:%S')} [{record.levelname}]  {record.msg}"
         self.consolewidget.appendPlainText(_text)
+        # Redraw
+        QtGui.QApplication.processEvents()
 
 
 # Add console handler to top level logger.
@@ -434,6 +472,11 @@ def main():
     try:
         fft_process.stop()
     except Exception as e:
+        pass
+
+    try:
+        habitat_uploader.close()
+    except:
         pass
 
 
