@@ -67,7 +67,7 @@ def populate_sample_rates(widgets):
 class AudioStream(object):
     """ Start up a pyAudio input stream, and pass data around to different callbacks """
 
-    def __init__(self, audio_device, fs, block_size=8192, fft_input=None, modem=None):
+    def __init__(self, audio_device, fs, block_size=8192, fft_input=None, modem=None, stats_callback = None):
 
         self.audio_device = audio_device
         self.fs = fs
@@ -76,6 +76,7 @@ class AudioStream(object):
         self.fft_input = fft_input
 
         self.modem = modem
+        self.stats_callback = stats_callback
 
         # Start audio stream
         self.audio = pyaudio.PyAudio()
@@ -97,7 +98,13 @@ class AudioStream(object):
         if self.fft_input:
             self.fft_input(data)
 
-        # TODO: Handle modem sample input.
+        if self.modem:
+            # Add samples to modem
+            _stats = self.modem.add_samples(data)
+            # Send any stats data back to the stats callback
+            if _stats:
+                if self.stats_callback:
+                    self.stats_callback(_stats)
 
         return (None, pyaudio.paContinue)
 

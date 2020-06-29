@@ -29,6 +29,7 @@ from .fft import *
 from .modem import *
 from .config import *
 from .habitat import *
+from .horuslib import HorusLib, Mode
 from . import __version__
 
 # Setup Logging
@@ -72,7 +73,8 @@ d0_modem = Dock("Modem", size=(300, 80))
 d0_habitat = Dock("Habitat", size=(300, 200))
 d0_other = Dock("Other", size=(300, 100))
 d1 = Dock("Spectrum", size=(800, 400))
-d2 = Dock("Modem Stats", size=(800, 300))
+d2_stats = Dock("Modem Stats", size=(70, 300))
+d2_snr = Dock("SNR", size=(730, 300))
 d3 = Dock("Data", size=(800, 50))
 d4 = Dock("Log", size=(800, 150))
 # Arrange docks.
@@ -81,9 +83,10 @@ area.addDock(d1, "right", d0)
 area.addDock(d0_modem, "bottom", d0)
 area.addDock(d0_habitat, "bottom", d0_modem)
 area.addDock(d0_other, "below", d0_habitat)
-area.addDock(d2, "bottom", d1)
-area.addDock(d3, "bottom", d2)
+area.addDock(d2_stats, "bottom", d1)
+area.addDock(d3, "bottom", d2_stats)
 area.addDock(d4, "bottom", d3)
+area.addDock(d2_snr, "right", d2_stats)
 d0_habitat.raiseDock()
 
 
@@ -196,21 +199,25 @@ widgets["estimatorLines"] = [
         pos=-1000,
         pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
         label="F1",
+        labelOpts={'position':0.9}
     ),
     pg.InfiniteLine(
         pos=-1000,
         pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
         label="F2",
+        labelOpts={'position':0.9}
     ),
     pg.InfiniteLine(
         pos=-1000,
         pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
         label="F3",
+        labelOpts={'position':0.9}
     ),
     pg.InfiniteLine(
         pos=-1000,
         pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
         label="F4",
+        labelOpts={'position':0.9}
     ),
 ]
 for _line in widgets["estimatorLines"]:
@@ -221,28 +228,44 @@ widgets["spectrumPlot"].setLabel("bottom", "Frequency", units="Hz")
 widgets["spectrumPlot"].setXRange(100, 4000)
 widgets["spectrumPlot"].setYRange(-100, -20)
 widgets["spectrumPlot"].setLimits(xMin=100, xMax=4000, yMin=-120, yMax=0)
+widgets["spectrumPlot"].showGrid(True, True)
 
 d1.addWidget(widgets["spectrumPlot"])
 
 widgets["spectrumPlotRange"] = [-100, -20]
 
-# Waterfall - TBD
-w3 = pg.LayoutWidget()
+
+w3_stats = pg.LayoutWidget()
+widgets["snrLabel"] = QtGui.QLabel("<b>SNR:</b> --.- dB")
+widgets["snrLabel"].setWordWrap(True);
+widgets["snrLabel"].setFont(QtGui.QFont("Courier New", 18))
+w3_stats.addWidget(widgets["snrLabel"], 0, 0, 2, 1)
+
+d2_stats.addWidget(w3_stats)
+
+# SNR Plot
+w3_snr = pg.LayoutWidget()
 widgets["snrPlot"] = pg.PlotWidget(title="SNR")
 widgets["snrPlot"].setLabel("left", "SNR (dB)")
 widgets["snrPlot"].setLabel("bottom", "Time (s)")
 widgets["snrPlot"].setXRange(-60, 0)
 widgets["snrPlot"].setYRange(-10, 30)
-widgets["snrPlot"].setLimits(xMin=0, xMax=60, yMin=-100, yMax=40)
+widgets["snrPlot"].setLimits(xMin=-60, xMax=0, yMin=-10, yMax=40)
+widgets["snrPlot"].showGrid(True, True)
 widgets["snrPlotRange"] = [-10, 30]
+widgets["snrPlotTime"] = np.array([])
+widgets["snrPlotSNR"] = np.array([])
+widgets["snrPlotData"] = widgets["snrPlot"].plot(widgets["snrPlotTime"], widgets["snrPlotSNR"])
 
-widgets["eyeDiagramPlot"] = pg.PlotWidget(title="Eye Diagram")
+# TODO: Look into eye diagram more
+# widgets["eyeDiagramPlot"] = pg.PlotWidget(title="Eye Diagram")
+# widgets["eyeDiagramData"] = widgets["eyeDiagramPlot"].plot([0])
 
+w3_snr.addWidget(widgets["snrPlot"], 0, 1, 2, 1)
 
-w3.addWidget(widgets["snrPlot"], 0, 0)
-w3.addWidget(widgets["eyeDiagramPlot"], 0, 1)
+#w3.addWidget(widgets["eyeDiagramPlot"], 0, 1)
 
-d2.addWidget(w3)
+d2_snr.addWidget(w3_snr)
 
 # Telemetry Data
 w4 = pg.LayoutWidget()
@@ -349,6 +372,40 @@ def handle_fft_update(data):
         widgets["spectrumPlotRange"][0], min(0, _new_max) + 20
     )
 
+def handle_status_update(status):
+    """ Handle a new status frame """
+    global widgets, habitat
+
+    # Update Frequency estimator markers
+    for _i in range(len(status.extended_stats.f_est)):
+        _fest_pos = float(status.extended_stats.f_est[_i])
+        if _fest_pos != 0.0:
+            widgets["estimatorLines"][_i].setPos(_fest_pos)
+
+    # Update SNR Plot
+    _time = time.time()
+    # Roll Time/SNR
+    widgets["snrPlotTime"] = np.append(widgets["snrPlotTime"], _time)
+    widgets["snrPlotSNR"] = np.append(widgets["snrPlotSNR"], float(status.snr))
+    if len(widgets["snrPlotTime"]) > 200:
+        widgets["snrPlotTime"] = widgets["snrPlotTime"][1:]
+        widgets["snrPlotSNR"] = widgets["snrPlotSNR"][1:]
+
+    # Plot new SNR data
+    widgets["snrPlotData"].setData((widgets["snrPlotTime"]-_time),  widgets["snrPlotSNR"])
+    _old_max = widgets["snrPlotRange"][1]
+    _tc = 0.1
+    _new_max = float((_old_max * (1 - _tc)) + (np.max(widgets["snrPlotSNR"]) * _tc))
+    widgets["snrPlotRange"][1] = _new_max
+    widgets["snrPlot"].setYRange(
+        widgets["snrPlotRange"][0], _new_max+10 
+    )
+
+    widgets["snrLabel"].setText(f"<b>SNR:</b> {float(status.snr):2.1f} dB")
+
+
+
+
 
 def add_fft_update(data):
     """ Try and insert a new set of FFT data into the update queue """
@@ -357,6 +414,37 @@ def add_fft_update(data):
         fft_update_queue.put_nowait(data)
     except:
         logging.error("FFT Update Queue Full!")
+
+
+def add_stats_update(frame):
+    """ Try and insert modem statistics into the processing queue """
+    global status_update_queue
+    try:
+        status_update_queue.put_nowait(frame)
+    except:
+        logging.error("Status Update Queue Full!")
+    
+
+
+
+def handle_new_packet(frame):
+    """ Handle receipt of a newly decoded packet """
+
+    if len(frame.data) > 0:
+        if type(frame.data) == bytes:
+            _packet = frame.data.hex()
+        else:
+            _packet = frame.data
+        
+        widgets["latestSentenceData"].setText(f"{_packet}")
+
+        # Immediately upload RTTY packets.
+        # Why are we getting packets from the decoder twice?
+        if _packet.startswith('$$$$$'):
+            habitat_uploader.add(_packet[3:]+'\n')
+        else:
+            # TODO: Handle binary packets.
+            pass
 
 
 def start_decoding():
@@ -368,7 +456,16 @@ def start_decoding():
         _sample_rate = int(widgets["audioSampleRateSelector"].currentText())
         _dev_index = audio_devices[_dev_name]["index"]
 
-        # TODO: Grab horus data here.
+        # Grab Horus Settings
+        _modem_name = widgets["horusModemSelector"].currentText()
+        _modem_id = HORUS_MODEM_LIST[_modem_name]['id']
+        _modem_rate = int(widgets["horusModemRateSelector"].currentText())
+        _modem_mask_enabled = widgets["horusMaskEstimatorSelector"].isChecked()
+        if _modem_mask_enabled:
+            _modem_tone_spacing = int(widgets["horusMaskSpacingEntry"].text())
+        else:
+            _modem_tone_spacing = -1
+
 
         # Init FFT Processor
         NFFT = 2 ** 14
@@ -377,7 +474,14 @@ def start_decoding():
             nfft=NFFT, stride=STRIDE, fs=_sample_rate, callback=add_fft_update
         )
 
-        # TODO: Setup modem here
+        # Setup Modem
+        horus_modem = HorusLib(
+            libpath=".",
+            mode=_modem_id,
+            rate=_modem_rate,
+            tone_spacing=_modem_tone_spacing,
+            callback=handle_new_packet
+        )
 
         # Setup Audio
         audio_stream = AudioStream(
@@ -385,7 +489,8 @@ def start_decoding():
             fs=_sample_rate,
             block_size=fft_process.stride,
             fft_input=fft_process.add_samples,
-            modem=None,
+            modem=horus_modem,
+            stats_callback=add_stats_update
         )
 
         widgets["startDecodeButton"].setText("Stop")
@@ -403,6 +508,11 @@ def start_decoding():
             fft_process.stop()
         except Exception as e:
             logging.exception("Could not stop fft processing.", exc_info=e)
+
+        try:
+            horus_modem.close()
+        except Exception as e:
+            logging.exception("Could not close horus modem.", exc_info=e)
 
         fft_update_queue = Queue(256)
         status_update_queue = Queue(256)
@@ -428,7 +538,8 @@ def processQueues():
 
     while status_update_queue.qsize() > 0:
         _status = status_update_queue.get()
-        # Handle Status updates here.
+
+        handle_status_update(_status)
 
 
 gui_update_timer = QtCore.QTimer()

@@ -1,18 +1,19 @@
 # Modem Interfacing
 import logging
+from .horuslib import Mode
 
 
 # Modem paramers and defaults
 HORUS_MODEM_LIST = {
     "Horus Binary v1 (Legacy)": {
-        "id": 0,
+        "id": Mode.BINARY_V1,
         "baud_rates": [50, 100, 300],
         "default_baud_rate": 100,
         "default_tone_spacing": 270,
         "use_mask_estimator": False,
     },
     "RTTY (7N2)": {
-        "id": 99,
+        "id": Mode.RTTY_7N2,
         "baud_rates": [50, 100, 300, 600, 1000],
         "default_baud_rate": 100,
         "default_tone_spacing": 425,
