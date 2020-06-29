@@ -41,9 +41,5 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
         ],
-        entry_points={
-            "console_scripts": [
-                "horus-gui=horusgui.gui",
-            ]
-        }
+        entry_points={"console_scripts": ["horus-gui=horusgui.gui",]},
     )

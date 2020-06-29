@@ -164,7 +164,7 @@ w1_habitat.addWidget(widgets["userAntennaEntry"], 3, 1, 1, 2)
 w1_habitat.addWidget(widgets["userRadioLabel"], 4, 0, 1, 1)
 w1_habitat.addWidget(widgets["userRadioEntry"], 4, 1, 1, 2)
 w1_habitat.addWidget(widgets["habitatUploadPosition"], 5, 0, 1, 3)
-w1_habitat.layout.setRowStretch(6,1)
+w1_habitat.layout.setRowStretch(6, 1)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -180,7 +180,7 @@ w1_other.addWidget(widgets["horusUploadLabel"], 0, 0, 1, 1)
 w1_other.addWidget(widgets["horusUploadSelector"], 0, 1, 1, 1)
 w1_other.addWidget(widgets["horusUDPLabel"], 1, 0, 1, 1)
 w1_other.addWidget(widgets["horusUDPEntry"], 1, 1, 1, 1)
-w1_other.layout.setRowStretch(5,1)
+w1_other.layout.setRowStretch(5, 1)
 
 d0_other.addWidget(w1_other)
 
@@ -295,12 +295,13 @@ read_config(widgets)
 
 # Start Habitat Uploader
 habitat_uploader = HabitatUploader(
-    user_callsign = widgets["userCallEntry"].text(),
-    listener_lat = widgets["userLatEntry"].text(),
-    listener_lon = widgets["userLonEntry"].text(),
-    listener_radio = widgets["userRadioEntry"].text(),
-    listener_antenna = widgets["userAntennaEntry"].text()
+    user_callsign=widgets["userCallEntry"].text(),
+    listener_lat=widgets["userLatEntry"].text(),
+    listener_lon=widgets["userLonEntry"].text(),
+    listener_radio=widgets["userRadioEntry"].text(),
+    listener_antenna=widgets["userAntennaEntry"].text(),
 )
+
 
 def habitat_position_reupload():
     """ Trigger a re-upload of user position information """
@@ -313,15 +314,16 @@ def habitat_position_reupload():
     habitat_uploader.listener_antenna = widgets["userAntennaEntry"].text()
     habitat_uploader.trigger_position_upload()
 
+
 widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
+
 
 def habitat_inhibit():
     """ Update the Habitat inhibit flag """
     global widgets, habitat_uploader
-    habitat_uploader.inhibit = not widgets[
-            "habitatUploadSelector"
-        ].isChecked()
+    habitat_uploader.inhibit = not widgets["habitatUploadSelector"].isChecked()
     logging.debug(f"Updated Habitat Inhibit state: {habitat_uploader.inhibit}")
+
 
 widgets["habitatUploadSelector"].clicked.connect(habitat_inhibit)
 
@@ -369,8 +371,8 @@ def start_decoding():
         # TODO: Grab horus data here.
 
         # Init FFT Processor
-        NFFT = 2**14
-        STRIDE = 2**13
+        NFFT = 2 ** 14
+        STRIDE = 2 ** 13
         fft_process = FFTProcess(
             nfft=NFFT, stride=STRIDE, fs=_sample_rate, callback=add_fft_update
         )
