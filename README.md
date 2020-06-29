@@ -28,8 +28,19 @@ Written by Mark Jessop <vk5qi@rfhead.net>
 
 ## Usage
 
-### Dependencies
-* [horuslib](https://github.com/projecthorus/horuslib) built, and libhorus.so available in this directory.
+### Build HorusLib
+
+```
+$ git clone https://github.com/projecthorus/horuslib.git
+$ cd horuslib && mkdir build_linux && cd build_linux
+$ cmake ..
+$ make
+$ cp src/libhorus.so ../../
+```
+
+(Replace .so with .dylib under OSX)
+
+TODO: Make a separate horuslib python package, which handles building of the library.
 
 ### Create a Virtual Environment
 
