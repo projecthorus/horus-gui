@@ -166,19 +166,29 @@ class HabitatUploader(object):
                 time.sleep(0.5)
 
             if not self.position_uploaded:
-                # Check for 'valid' position
-                if (self.listener_lat != 0.0) or (self.listener_lon != 0.0):
-                    _success = self.uploadListenerPosition(
-                        self.user_callsign,
-                        self.listener_lat,
-                        self.listener_lon,
-                        self.listener_radio,
-                        self.listener_antenna,
-                    )
+                # Validate the lat/lon entries.
+                try:
+                    _lat = float(self.listener_lat)
+                    _lon = float(self.listener_lon)
 
-                    # Set this flag regardless if the uplaod worked.
-                    # The user can trigger a re-upload.
-                    self.position_uploaded = True
+                    if (_lat != 0.0) or (_lon != 0.0):
+                        _success = self.uploadListenerPosition(
+                            self.user_callsign,
+                            _lat,
+                            _lon,
+                            self.listener_radio,
+                            self.listener_antenna,
+                        )
+                    else:
+                        logging.warning("Listener position set to 0.0/0.0 - not uploading.")
+                
+                except Exception as e:
+                    logging.error("Error uploading listener position: %s" % str(e))
+
+                # Set this flag regardless if the upload worked.
+                # The user can trigger a re-upload.
+                self.position_uploaded = True
+
 
         logging.info("Stopped Habitat Uploader Thread.")
 
@@ -277,14 +287,6 @@ class HabitatUploader(object):
     def uploadListenerPosition(self, callsign, lat, lon, radio="", antenna=""):
         """ Initializer Listener Callsign, and upload Listener Position """
 
-        # Validate the lat/lon entries.
-        try:
-            _lat = float(lat)
-            _lon = float(lon)
-        except Exception as e:
-            logging.error("Habitat - Could not parse user position lat/lon values.")
-            return False
-
         # Attempt to initialize the listeners callsign
         resp = self.initListenerCallsign(callsign, radio=radio, antenna=antenna)
         # If this fails, it means we can't contact the Habitat server,
@@ -298,8 +300,8 @@ class HabitatUploader(object):
             "data": {
                 "callsign": callsign,
                 "chase": False,
-                "latitude": _lat,
-                "longitude": _lon,
+                "latitude": lat,
+                "longitude": lon,
                 "altitude": 0,
                 "speed": 0,
             },
