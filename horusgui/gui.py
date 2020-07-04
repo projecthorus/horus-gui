@@ -127,6 +127,7 @@ widgets["horusMaskSpacingEntry"] = QtGui.QLineEdit("270")
 
 # Start/Stop
 widgets["startDecodeButton"] = QtGui.QPushButton("Start")
+widgets["startDecodeButton"].setEnabled(False)
 
 w1_modem.addWidget(widgets["horusModemLabel"], 0, 0, 1, 1)
 w1_modem.addWidget(widgets["horusModemSelector"], 0, 1, 1, 1)
@@ -553,7 +554,7 @@ widgets["startDecodeButton"].clicked.connect(start_decoding)
 # GUI Update Loop
 def processQueues():
     """ Read in data from the queues, this decouples the GUI and async inputs somewhat. """
-    global fft_update_queue, status_update_queue, decoder_init
+    global fft_update_queue, status_update_queue, decoder_init, widgets
 
     while fft_update_queue.qsize() > 0:
         _data = fft_update_queue.get()
@@ -566,9 +567,12 @@ def processQueues():
         handle_status_update(_status)
 
     if not decoder_init:
+        # Initialise decoders, and other libraries here.
         init_payload_id_list()
         init_custom_field_list()
         decoder_init = True
+        # Once initialised, enable the start button
+        widgets["startDecodeButton"].setEnabled(True)
 
 
 gui_update_timer = QtCore.QTimer()
