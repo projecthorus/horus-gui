@@ -451,6 +451,7 @@ def handle_new_packet(frame):
         if _packet.startswith('$$$$$'):
             # TODO: Check CRC!!!
             habitat_uploader.add(_packet[3:]+'\n')
+            widgets["latestDecodedSentenceData"].setText(f"{_packet}")
         else:
             # TODO: Handle binary packets.
 
@@ -482,6 +483,14 @@ def start_decoding():
         else:
             _modem_tone_spacing = -1
 
+        # Reset Frequency Estimator indicators
+        for _line in widgets["estimatorLines"]:
+            _line.setPos(-1000)
+
+        # Reset data fields
+        widgets["latestRawSentenceData"].setText("NO DATA")
+        widgets["latestDecodedSentenceData"].setText("NO DATA")
+
 
         # Init FFT Processor
         NFFT = 2 ** 14
@@ -492,7 +501,6 @@ def start_decoding():
 
         # Setup Modem
         horus_modem = HorusLib(
-            libpath=".",
             mode=_modem_id,
             rate=_modem_rate,
             tone_spacing=_modem_tone_spacing,
