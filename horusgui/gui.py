@@ -29,7 +29,9 @@ from .fft import *
 from .modem import *
 from .config import *
 from .habitat import *
-from .horuslib import HorusLib, Mode
+from horusdemodlib.demod import HorusLib, Mode
+from horusdemodlib.decoder import decode_packet
+from horusdemodlib.payloads import *
 from . import __version__
 
 # Setup Logging
@@ -50,6 +52,8 @@ audio_stream = None
 fft_process = None
 horus_modem = None
 habitat_uploader = None
+
+decoder_init = False
 
 # Global running indicator
 running = False
@@ -269,11 +273,16 @@ d2_snr.addWidget(w3_snr)
 
 # Telemetry Data
 w4 = pg.LayoutWidget()
-widgets["latestSentenceLabel"] = QtGui.QLabel("<b>Latest Sentence:</b>")
-widgets["latestSentenceData"] = QtGui.QLabel("NO DATA")
-widgets["latestSentenceData"].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
-w4.addWidget(widgets["latestSentenceLabel"], 0, 0, 1, 1)
-w4.addWidget(widgets["latestSentenceData"], 0, 1, 1, 6)
+widgets["latestRawSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Raw):</b>")
+widgets["latestRawSentenceData"] = QtGui.QLabel("NO DATA")
+widgets["latestRawSentenceData"].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
+widgets["latestDecodedSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Decoded):</b>")
+widgets["latestDecodedSentenceData"] = QtGui.QLabel("NO DATA")
+widgets["latestDecodedSentenceData"].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
+w4.addWidget(widgets["latestRawSentenceLabel"], 0, 0, 1, 1)
+w4.addWidget(widgets["latestRawSentenceData"], 0, 1, 1, 6)
+w4.addWidget(widgets["latestDecodedSentenceLabel"], 1, 0, 1, 1)
+w4.addWidget(widgets["latestDecodedSentenceData"], 1, 1, 1, 6)
 d3.addWidget(w4)
 
 w5 = pg.LayoutWidget()
@@ -436,15 +445,22 @@ def handle_new_packet(frame):
         else:
             _packet = frame.data
         
-        widgets["latestSentenceData"].setText(f"{_packet}")
+        widgets["latestRawSentenceData"].setText(f"{_packet}")
 
         # Immediately upload RTTY packets.
-        # Why are we getting packets from the decoder twice?
         if _packet.startswith('$$$$$'):
+            # TODO: Check CRC!!!
             habitat_uploader.add(_packet[3:]+'\n')
         else:
             # TODO: Handle binary packets.
-            pass
+
+            try:
+                _decoded = decode_packet(frame.data)
+                widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
+                habitat_uploader.add(_decoded['ukhas_str']+'\n')
+            except Exception as e:
+                widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
+                logging.error(f"Decode Failed: {str(e)}")
 
 
 def start_decoding():
@@ -529,7 +545,7 @@ widgets["startDecodeButton"].clicked.connect(start_decoding)
 # GUI Update Loop
 def processQueues():
     """ Read in data from the queues, this decouples the GUI and async inputs somewhat. """
-    global fft_update_queue, status_update_queue
+    global fft_update_queue, status_update_queue, decoder_init
 
     while fft_update_queue.qsize() > 0:
         _data = fft_update_queue.get()
@@ -540,6 +556,11 @@ def processQueues():
         _status = status_update_queue.get()
 
         handle_status_update(_status)
+
+    if not decoder_init:
+        init_payload_id_list()
+        init_custom_field_list()
+        decoder_init = True
 
 
 gui_update_timer = QtCore.QTimer()

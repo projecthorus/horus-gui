@@ -1,8 +1,8 @@
 numpy
 pyaudio
-requests
 crcmod
 PyQt5
 pyqtgraph
 ruamel.yaml
 requests
+horusdemodlib

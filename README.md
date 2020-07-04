@@ -30,23 +30,23 @@ Written by Mark Jessop <vk5qi@rfhead.net>
 
 ### Build HorusLib
 
-```
-$ git clone https://github.com/projecthorus/horuslib.git
-$ cd horuslib && mkdir build_linux && cd build_linux
+```console
+$ git clone https://github.com/projecthorus/horusdemodlib.git
+$ cd horusdemodlib && mkdir build && cd build
 $ cmake ..
 $ make
-$ cp src/libhorus.so ../../
+$ make install
 ```
 
-(Replace .so with .dylib under OSX)
-
-TODO: Make a separate horuslib python package, which handles building of the library.
+TODO: Make a separate horusdemodlib python package, which handles building of the library.
 
 ### Create a Virtual Environment
 
 Create a virtual environment and install dependencies.
 
 ```console
+$ git clone https://github.com/projecthorus/horus-gui.git
+$ cd horus-gui
 $ python3 -m venv venv
 $ source venv/bin/activate
 (venv) $ pip install pip -U       (Optional - this updates pip)
@@ -64,4 +64,6 @@ entry points so it can be used like a normal install.
 ```
 
 ### Run
-`$ python -m horusgui.gui`
+```console
+$ python -m horusgui.gui
+```

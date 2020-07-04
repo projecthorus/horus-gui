@@ -1,6 +1,6 @@
 # Modem Interfacing
 import logging
-from .horuslib import Mode
+from horusdemodlib.demod import Mode
 
 
 # Modem paramers and defaults

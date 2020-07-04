@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 regexp = re.compile(r".*__version__ = [\'\"](.*?)[\'\"]", re.S)
 
-init_file = os.path.join(os.path.dirname(__file__), "src", "horusgui", "__init__.py")
+init_file = os.path.join(os.path.dirname(__file__), "horusgui", "__init__.py")
 with open(init_file, "r") as f:
     module_content = f.read()
     match = regexp.match(module_content)
@@ -29,13 +29,13 @@ with open("requirements.txt", "r") as f:
 if __name__ == "__main__":
     setup(
         name="horusgui",
-        description="Project Horus Telemetry Decoer",
+        description="Project Horus GUI Telemetry Decdoer",
         long_description=readme,
         version=version,
         install_requires=requirements,
         keywords=["horus telemetry radio"],
-        package_dir={"": "src"},
-        packages=find_packages("src"),
+        package_dir={"": "."},
+        packages=find_packages("."),
         classifiers=[
             "Intended Audience :: Developers",
             "Programming Language :: Python :: 3.6",
