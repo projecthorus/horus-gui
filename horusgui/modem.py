@@ -14,7 +14,7 @@ HORUS_MODEM_LIST = {
     },
     "RTTY (7N2)": {
         "id": Mode.RTTY_7N2,
-        "baud_rates": [50, 100, 300, 600, 1000],
+        "baud_rates": [50, 75, 100, 300, 600, 1000],
         "default_baud_rate": 100,
         "default_tone_spacing": 425,
         "use_mask_estimator": False,
