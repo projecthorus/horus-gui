@@ -4,7 +4,7 @@ Telemetry demodulator for the following modems in use by Project Horus
 * Horus Binary Modes
   * v1 - Legacy 22 byte mode, Golay FEC
   * v2 - 16/32-byte modes, LDPC FEC (Still in development)
-* RTTY (7N2 only)
+* RTTY (7N2 only, for now)
 
 
 Written by Mark Jessop <vk5qi@rfhead.net>
@@ -13,18 +13,14 @@ Written by Mark Jessop <vk5qi@rfhead.net>
 
 
 ### TODO LIST - Important Stuff
-* Audio input via pyAudio and spectrum display. - DONE
-* Integrate Horus Modems (need help from @xssfox!) - First pass DONE
-* Basic display of decoded data (RTTY or HEX data for binary) - DONE
-* Save/Reload settings to file - Initial pass done.
-* Decode horus binary data (move horusbinary.py into a library?)
-* Upload telemetry to Habitat, with upload status - DONE
-* Better build system (build horuslib as part of package build?)
+* Stop decoded data pane from resizing on bad/long decodes - TODO
+* Export of telemetry via Horus UDP
+* Better build system 
 * Windows binary
 
 ### TODO LIST - Extras
 * UDP input from GQRX
-* Waterfall Display 
+* Waterfall Display  (? Need something GPU accelerated if possible...)
 
 ## Usage
 
@@ -37,8 +33,6 @@ $ cmake ..
 $ make
 $ make install
 ```
-
-TODO: Make a separate horusdemodlib python package, which handles building of the library.
 
 ### Create a Virtual Environment
 

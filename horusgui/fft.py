@@ -13,6 +13,7 @@ class FFTProcess(object):
         self,
         nfft=8192,
         stride=4096,
+        update_decimation=1,
         fs=48000,
         sample_width=2,
         range=[100, 4000],
@@ -20,6 +21,8 @@ class FFTProcess(object):
     ):
         self.nfft = nfft
         self.stride = stride
+        self.update_decimation = update_decimation
+        self.update_counter = 0
         self.fs = fs
         self.sample_width = sample_width
         self.range = range
@@ -61,7 +64,10 @@ class FFTProcess(object):
         ) - 20 * np.log10(self.nfft)
 
         if self.callback != None:
-            self.callback({"fft": _fft[self.mask], "scale": self.fft_scale[self.mask]})
+            if self.update_counter % self.update_decimation == 0:
+                self.callback({"fft": _fft[self.mask], "scale": self.fft_scale[self.mask]})
+                
+            self.update_counter += 1
 
     def process_block(self, samples):
         """ Add a block of samples to the input buffer. Calculate and process FFTs if the buffer is big enough """

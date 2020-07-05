@@ -29,8 +29,9 @@ from .fft import *
 from .modem import *
 from .config import *
 from .habitat import *
+from .utils import position_info
 from horusdemodlib.demod import HorusLib, Mode
-from horusdemodlib.decoder import decode_packet
+from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
 from . import __version__
 
@@ -76,10 +77,11 @@ d0 = Dock("Audio", size=(300, 50))
 d0_modem = Dock("Modem", size=(300, 80))
 d0_habitat = Dock("Habitat", size=(300, 200))
 d0_other = Dock("Other", size=(300, 100))
-d1 = Dock("Spectrum", size=(800, 400))
+d1 = Dock("Spectrum", size=(800, 350))
 d2_stats = Dock("Modem Stats", size=(70, 300))
 d2_snr = Dock("SNR", size=(730, 300))
-d3 = Dock("Data", size=(800, 50))
+d3_data = Dock("Data", size=(800, 50))
+d3_position = Dock("Position", size=(800, 50))
 d4 = Dock("Log", size=(800, 150))
 # Arrange docks.
 area.addDock(d0)
@@ -88,8 +90,9 @@ area.addDock(d0_modem, "bottom", d0)
 area.addDock(d0_habitat, "bottom", d0_modem)
 area.addDock(d0_other, "below", d0_habitat)
 area.addDock(d2_stats, "bottom", d1)
-area.addDock(d3, "bottom", d2_stats)
-area.addDock(d4, "bottom", d3)
+area.addDock(d3_data, "bottom", d2_stats)
+area.addDock(d3_position, "bottom", d3_data)
+area.addDock(d4, "bottom", d3_position)
 area.addDock(d2_snr, "right", d2_stats)
 d0_habitat.raiseDock()
 
@@ -273,18 +276,65 @@ w3_snr.addWidget(widgets["snrPlot"], 0, 1, 2, 1)
 d2_snr.addWidget(w3_snr)
 
 # Telemetry Data
-w4 = pg.LayoutWidget()
+w4_data = pg.LayoutWidget()
 widgets["latestRawSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Raw):</b>")
 widgets["latestRawSentenceData"] = QtGui.QLabel("NO DATA")
 widgets["latestRawSentenceData"].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
+widgets["latestRawSentenceData"].setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
 widgets["latestDecodedSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Decoded):</b>")
 widgets["latestDecodedSentenceData"] = QtGui.QLabel("NO DATA")
 widgets["latestDecodedSentenceData"].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
-w4.addWidget(widgets["latestRawSentenceLabel"], 0, 0, 1, 1)
-w4.addWidget(widgets["latestRawSentenceData"], 0, 1, 1, 6)
-w4.addWidget(widgets["latestDecodedSentenceLabel"], 1, 0, 1, 1)
-w4.addWidget(widgets["latestDecodedSentenceData"], 1, 1, 1, 6)
-d3.addWidget(w4)
+widgets["latestDecodedSentenceData"].setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+w4_data.addWidget(widgets["latestRawSentenceLabel"], 0, 0, 1, 1)
+w4_data.addWidget(widgets["latestRawSentenceData"], 0, 1, 1, 6)
+w4_data.addWidget(widgets["latestDecodedSentenceLabel"], 1, 0, 1, 1)
+w4_data.addWidget(widgets["latestDecodedSentenceData"], 1, 1, 1, 6)
+d3_data.addWidget(w4_data)
+
+w4_position = pg.LayoutWidget()
+widgets["latestPacketCallsignLabel"] = QtGui.QLabel("<b>Callsign</b>")
+widgets["latestPacketCallsignValue"] = QtGui.QLabel("---")
+widgets["latestPacketCallsignValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+widgets["latestPacketTimeLabel"] = QtGui.QLabel("<b>Time</b>")
+widgets["latestPacketTimeValue"] = QtGui.QLabel("---")
+widgets["latestPacketTimeValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+widgets["latestPacketLatitudeLabel"] = QtGui.QLabel("<b>Latitude</b>")
+widgets["latestPacketLatitudeValue"] = QtGui.QLabel("---")
+widgets["latestPacketLatitudeValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+widgets["latestPacketLongitudeLabel"] = QtGui.QLabel("<b>Longitude</b>")
+widgets["latestPacketLongitudeValue"] = QtGui.QLabel("---")
+widgets["latestPacketLongitudeValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+widgets["latestPacketAltitudeLabel"] = QtGui.QLabel("<b>Altitude</b>")
+widgets["latestPacketAltitudeValue"] = QtGui.QLabel("---")
+widgets["latestPacketAltitudeValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+widgets["latestPacketBearingLabel"] = QtGui.QLabel("<b>Bearing</b>")
+widgets["latestPacketBearingValue"] = QtGui.QLabel("---")
+widgets["latestPacketBearingValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+widgets["latestPacketElevationLabel"] = QtGui.QLabel("<b>Elevation</b>")
+widgets["latestPacketElevationValue"] = QtGui.QLabel("---")
+widgets["latestPacketElevationValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+widgets["latestPacketRangeLabel"] = QtGui.QLabel("<b>Range (km)</b>")
+widgets["latestPacketRangeValue"] = QtGui.QLabel("---")
+widgets["latestPacketRangeValue"].setFont(QtGui.QFont("Courier New", 16, QtGui.QFont.Bold))
+
+w4_position.addWidget(widgets["latestPacketCallsignLabel"], 0, 0, 1, 2)
+w4_position.addWidget(widgets["latestPacketCallsignValue"], 1, 0, 1, 2)
+w4_position.addWidget(widgets["latestPacketTimeLabel"], 0, 2, 1, 1)
+w4_position.addWidget(widgets["latestPacketTimeValue"], 1, 2, 1, 1)
+w4_position.addWidget(widgets["latestPacketLatitudeLabel"], 0, 3, 1, 1)
+w4_position.addWidget(widgets["latestPacketLatitudeValue"], 1, 3, 1, 1)
+w4_position.addWidget(widgets["latestPacketLongitudeLabel"], 0, 4, 1, 1)
+w4_position.addWidget(widgets["latestPacketLongitudeValue"], 1, 4, 1, 1)
+w4_position.addWidget(widgets["latestPacketAltitudeLabel"], 0, 5, 1, 1)
+w4_position.addWidget(widgets["latestPacketAltitudeValue"], 1, 5, 1, 1)
+w4_position.addWidget(widgets["latestPacketBearingLabel"], 0, 7, 1, 1)
+w4_position.addWidget(widgets["latestPacketBearingValue"], 1, 7, 1, 1)
+w4_position.addWidget(widgets["latestPacketElevationLabel"], 0, 8, 1, 1)
+w4_position.addWidget(widgets["latestPacketElevationValue"], 1, 8, 1, 1)
+w4_position.addWidget(widgets["latestPacketRangeLabel"], 0, 9, 1, 1)
+w4_position.addWidget(widgets["latestPacketRangeValue"], 1, 9, 1, 1)
+w4_position.layout.setRowStretch(1, 6)
+d3_position.addWidget(w4_position)
 
 w5 = pg.LayoutWidget()
 widgets["console"] = QtWidgets.QPlainTextEdit()
@@ -442,20 +492,37 @@ def handle_new_packet(frame):
 
     if len(frame.data) > 0:
         if type(frame.data) == bytes:
-            _packet = frame.data.hex()
+            # Packets from the binary decoders are provided as raw bytes.
+            # Conver them to a hexadecimal representation for display in the 'raw' area.
+            _packet = frame.data.hex().upper()
         else:
+            # RTTY packets are provided as a string, and can be displayed directly
             _packet = frame.data
         
+        # Update the raw display.
         widgets["latestRawSentenceData"].setText(f"{_packet}")
 
-        # Immediately upload RTTY packets.
-        if _packet.startswith('$$$$$'):
-            # TODO: Check CRC!!!
-            habitat_uploader.add(_packet[3:]+'\n')
-            widgets["latestDecodedSentenceData"].setText(f"{_packet}")
-        else:
-            # TODO: Handle binary packets.
 
+        _decoded = None
+
+        if type(frame.data) == str:
+            # RTTY packet handling.
+            # Attempt to extract fields from it:
+            try:
+                _decoded = parse_ukhas_string(frame.data)
+                # If we get here, the string is valid!
+                widgets["latestDecodedSentenceData"].setText(f"{_packet}")
+
+                # Upload the string to Habitat
+                _decoded_str = "$$" + frame.data.split('$')[-1] + '\n'
+                habitat_uploader.add(_decoded_str)
+
+            except Exception as e:
+                widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
+                logging.error(f"Decode Failed: {str(e)}")
+        
+        else:
+            # Handle binary packets
             try:
                 _decoded = decode_packet(frame.data)
                 widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
@@ -463,10 +530,38 @@ def handle_new_packet(frame):
             except Exception as e:
                 widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
                 logging.error(f"Decode Failed: {str(e)}")
+        
+        # If we have extracted data, update the decoded data display
+        if _decoded:
+            widgets["latestPacketCallsignValue"].setText(_decoded['callsign'])
+            widgets["latestPacketTimeValue"].setText(_decoded['time'])
+            widgets["latestPacketLatitudeValue"].setText(f"{_decoded['latitude']:.5f}")
+            widgets["latestPacketLongitudeValue"].setText(f"{_decoded['longitude']:.5f}")
+            widgets["latestPacketAltitudeValue"].setText(f"{_decoded['altitude']}")
+
+            # Attempt to update the range/elevation/bearing fields.
+            try:
+                _station_lat = float(widgets["userLatEntry"].text())
+                _station_lon = float(widgets["userLonEntry"].text())
+                _station_alt = 0.0
+
+                if (_station_lat != 0.0) or (_station_lon != 0.0):
+                    _position_info = position_info(
+                        (_station_lat, _station_lon, _station_alt),
+                        (_decoded['latitude'], _decoded['longitude'], _decoded['altitude'])
+                    )
+
+                    widgets['latestPacketBearingValue'].setText(f"{_position_info['bearing']:.1f}")
+                    widgets['latestPacketElevationValue'].setText(f"{_position_info['elevation']:.1f}")
+                    widgets['latestPacketRangeValue'].setText(f"{_position_info['straight_distance']/1000.0:.1f}")
+            except Exception as e:
+                logging.error(f"Could not calculate relative position to payload - {str(e)}")
+
+
 
 
 def start_decoding():
-    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running, fft_update_queue, status_update_queue
+    global widgets, audio_stream, fft_process, horus_modem, habitat_uploader, audio_devices, running, fft_update_queue, status_update_queue
 
     if not running:
         # Grab settings off widgets
@@ -491,13 +586,27 @@ def start_decoding():
         # Reset data fields
         widgets["latestRawSentenceData"].setText("NO DATA")
         widgets["latestDecodedSentenceData"].setText("NO DATA")
+        widgets["latestPacketCallsignValue"].setText("---")
+        widgets["latestPacketTimeValue"].setText("---")
+        widgets["latestPacketLatitudeValue"].setText("---")
+        widgets["latestPacketLongitudeValue"].setText("---")
+        widgets["latestPacketAltitudeValue"].setText("---")
+        widgets["latestPacketElevationValue"].setText("---")
+        widgets["latestPacketBearingValue"].setText("---")
+        widgets["latestPacketRangeValue"].setText("---")
 
+        # Ensure the Habitat upload is set correctly.
+        habitat_uploader.inhibit = not widgets["habitatUploadSelector"].isChecked()
 
         # Init FFT Processor
-        NFFT = 2 ** 14
+        NFFT = 2 ** 13
         STRIDE = 2 ** 13
         fft_process = FFTProcess(
-            nfft=NFFT, stride=STRIDE, fs=_sample_rate, callback=add_fft_update
+            nfft=NFFT, 
+            stride=STRIDE,
+            update_decimation=1,
+            fs=_sample_rate, 
+            callback=add_fft_update
         )
 
         # Setup Modem
