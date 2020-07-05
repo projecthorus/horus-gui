@@ -7,11 +7,13 @@
 
 import logging
 import os
+from pyqtgraph.Qt import QtCore
 from ruamel.yaml import YAML
 from . import __version__
 
 
 default_config = {
+    "version": __version__,
     "audio_device": "None",
     "modem": "Horus Binary v1 (Legacy)",
     "habitat_upload_enabled": True,
@@ -24,60 +26,53 @@ default_config = {
     "horus_udp_port": 55672,
 }
 
-
-def init_config(filename="config.yml"):
-    """ Initialise the configuration file if it does not exist """
-    global default_config
-    logging.info(f"Writing configuration file {filename}")
-
-    yaml = YAML()
-
-    try:
-        with open(filename, "w") as _outfile:
-            yaml.dump(default_config, _outfile)
-    except Exception as e:
-        logging.error(f"Could not write configuration file - {str(e)}")
+qt_settings = QtCore.QSettings("Project Horus", "Horus-GUI")
 
 
-def read_config(widgets, filename="config.yml"):
-    """ Read in a configuration yml file, and set up all GUI widgets """
-    if not os.path.exists(filename):
-        init_config(filename)
+def write_config():
+    """ Write global settings into QSettings """
+    global default_config, qt_settings
 
-    yaml = YAML()
+    # Write all settings
+    for _setting in default_config:
+        qt_settings.setValue(_setting, default_config[_setting])
+    
+    logging.debug("Wrote configuration state into QSettings")
 
-    _config = None
 
-    try:
-        with open(filename, "r") as _infile:
-            _config = yaml.load(_infile)
-    except Exception as e:
-        logging.error(f"Error reading config file - {str(e)}")
+def read_config(widgets):
+    """ Read in configuration settings from Qt """
+    global qt_settings, default_config
 
-    if _config == None:
-        return
+    # Try and read in the version parameter from QSettings
+    if qt_settings.value("version") != __version__:
+        logging.debug("Configuration out of date, clearing and overwriting.")
+        write_config()
+
+    for _setting in default_config:
+        default_config[_setting] = qt_settings.value(_setting)
 
     if widgets:
         # Habitat Settings
-        widgets["habitatUploadSelector"].setChecked(_config["habitat_upload_enabled"])
-        widgets["userCallEntry"].setText(str(_config["habitat_call"]))
-        widgets["userLatEntry"].setText(str(_config["habitat_lat"]))
-        widgets["userLonEntry"].setText(str(_config["habitat_lon"]))
-        widgets["userAntennaEntry"].setText(str(_config["habitat_antenna"]))
-        widgets["userRadioEntry"].setText(str(_config["habitat_radio"]))
+        widgets["habitatUploadSelector"].setChecked(default_config["habitat_upload_enabled"])
+        widgets["userCallEntry"].setText(str(default_config["habitat_call"]))
+        widgets["userLatEntry"].setText(str(default_config["habitat_lat"]))
+        widgets["userLonEntry"].setText(str(default_config["habitat_lon"]))
+        widgets["userAntennaEntry"].setText(str(default_config["habitat_antenna"]))
+        widgets["userRadioEntry"].setText(str(default_config["habitat_radio"]))
 
         # Horus Settings
-        widgets["horusUploadSelector"].setChecked(_config["horus_udp_enabled"])
-        widgets["horusUDPEntry"].setText(str(_config["horus_udp_port"]))
+        widgets["horusUploadSelector"].setChecked(default_config["horus_udp_enabled"])
+        widgets["horusUDPEntry"].setText(str(default_config["horus_udp_port"]))
 
         # Try and set the audio device.
         # If the audio device is not in the available list of devices, this will fail silently.
-        widgets["audioDeviceSelector"].setCurrentText(_config["audio_device"])
+        widgets["audioDeviceSelector"].setCurrentText(default_config["audio_device"])
         # Try and set the modem. If the modem is not valid, this will fail silently.
-        widgets["horusModemSelector"].setCurrentText(_config["modem"])
+        widgets["horusModemSelector"].setCurrentText(default_config["modem"])
 
 
-def save_config(widgets, filename="config.yml"):
+def save_config(widgets):
     """ Write out settings to a config file """
     global default_config
 
@@ -96,8 +91,17 @@ def save_config(widgets, filename="config.yml"):
         default_config["modem"] = widgets["horusModemSelector"].currentText()
 
         # Write out to config file
-        init_config(filename)
+        write_config()
 
 
 if __name__ == "__main__":
+    import sys
+    # Setup Logging
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG
+    )
+
+    if len(sys.argv) >= 2:
+        write_config()
+
     read_config(None)
