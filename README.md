@@ -34,18 +34,32 @@ $ make
 $ make install
 ```
 
-### Create a Virtual Environment
-
-Create a virtual environment and install dependencies.
-
+### Grab this Repo
 ```console
 $ git clone https://github.com/projecthorus/horus-gui.git
 $ cd horus-gui
+```
+
+### (Optional) Create a Virtual Environment
+
+Create a virtual environment and install dependencies.
+```console
 $ python3 -m venv venv
 $ source venv/bin/activate
 (venv) $ pip install pip -U       (Optional - this updates pip)
-(venv) $ pip install -r requirements.txt
 ```
+
+### Install Python Dependencies
+```console
+$ pip install -r requirements.txt
+```
+
+NOTE: If you get errors relating to pyaudio when trying to install into a venv, make sure that portaudio is installed (`libportaudio-dev` under Linux distros, or `portaudio` under Macports), and then install pyaudio pointing to the portaudio lib by running:
+```
+(Linux) $ pip install --global-option='build_ext' --global-option='-I/usr/include' --global-option='-L/usr/lib' pyaudio
+(OSX)   $ pip install --global-option='build_ext' --global-option='-I/opt/local/include' --global-option='-L/opt/local/lib' pyaudio
+```
+You should then be able to re-run the install requirements command above.
 
 ### Install Package
 
