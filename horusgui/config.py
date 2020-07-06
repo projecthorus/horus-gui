@@ -30,6 +30,21 @@ default_config = {
 
 qt_settings = QtCore.QSettings("Project Horus", "Horus-GUI")
 
+def ValueToBool(Value):
+    if isinstance(Value, bool):
+        RetVal = Value
+    else:
+        RetVal = None
+        if isinstance(Value, str):
+            if Value.lower() == 'true':
+                RetVal = True
+            elif Value.lower() == 'false':
+                RetVal = False
+        else:
+            RetVal = bool(Value)
+    
+    return RetVal
+
 
 def write_config():
     """ Write global settings into QSettings """
@@ -56,7 +71,7 @@ def read_config(widgets):
 
     if widgets:
         # Habitat Settings
-        widgets["habitatUploadSelector"].setChecked(bool(default_config["habitat_upload_enabled"]))
+        widgets["habitatUploadSelector"].setChecked(ValueToBool(default_config["habitat_upload_enabled"]))
         widgets["userCallEntry"].setText(str(default_config["habitat_call"]))
         widgets["userLatEntry"].setText(str(default_config["habitat_lat"]))
         widgets["userLonEntry"].setText(str(default_config["habitat_lon"]))
@@ -64,7 +79,7 @@ def read_config(widgets):
         widgets["userRadioEntry"].setText(str(default_config["habitat_radio"]))
 
         # Horus Settings
-        widgets["horusUploadSelector"].setChecked(bool(default_config["horus_udp_enabled"]))
+        widgets["horusUploadSelector"].setChecked(ValueToBool(default_config["horus_udp_enabled"]))
         widgets["horusUDPEntry"].setText(str(default_config["horus_udp_port"]))
 
         # Try and set the audio device.
