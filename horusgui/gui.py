@@ -677,8 +677,11 @@ def processQueues():
 
     if not decoder_init:
         # Initialise decoders, and other libraries here.
-        init_payload_id_list()
-        init_custom_field_list()
+        try:
+            init_payload_id_list()
+            init_custom_field_list()
+        except Exception as e:
+            logging.error(f"Error downloading payload/field lists: {str(e)}")
         decoder_init = True
         # Once initialised, enable the start button
         widgets["startDecodeButton"].setEnabled(True)
