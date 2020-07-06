@@ -10,12 +10,14 @@ import os
 from pyqtgraph.Qt import QtCore
 from ruamel.yaml import YAML
 from . import __version__
+from .modem import populate_modem_settings
 
 
 default_config = {
     "version": __version__,
     "audio_device": "None",
     "modem": "Horus Binary v1 (Legacy)",
+    "baud_rate": -1,
     "habitat_upload_enabled": True,
     "habitat_call": "N0CALL",
     "habitat_lat": 0.0,
@@ -54,7 +56,7 @@ def read_config(widgets):
 
     if widgets:
         # Habitat Settings
-        widgets["habitatUploadSelector"].setChecked(default_config["habitat_upload_enabled"])
+        widgets["habitatUploadSelector"].setChecked(bool(default_config["habitat_upload_enabled"]))
         widgets["userCallEntry"].setText(str(default_config["habitat_call"]))
         widgets["userLatEntry"].setText(str(default_config["habitat_lat"]))
         widgets["userLonEntry"].setText(str(default_config["habitat_lon"]))
@@ -62,7 +64,7 @@ def read_config(widgets):
         widgets["userRadioEntry"].setText(str(default_config["habitat_radio"]))
 
         # Horus Settings
-        widgets["horusUploadSelector"].setChecked(default_config["horus_udp_enabled"])
+        widgets["horusUploadSelector"].setChecked(bool(default_config["horus_udp_enabled"]))
         widgets["horusUDPEntry"].setText(str(default_config["horus_udp_port"]))
 
         # Try and set the audio device.
@@ -70,6 +72,12 @@ def read_config(widgets):
         widgets["audioDeviceSelector"].setCurrentText(default_config["audio_device"])
         # Try and set the modem. If the modem is not valid, this will fail silently.
         widgets["horusModemSelector"].setCurrentText(default_config["modem"])
+        # Populate the default settings.
+        populate_modem_settings(widgets)
+
+        if default_config['baud_rate'] != -1:
+            widgets["horusModemRateSelector"].setCurrentText(str(default_config['baud_rate']))
+
 
 
 def save_config(widgets):
@@ -89,6 +97,7 @@ def save_config(widgets):
         default_config["horus_udp_port"] = int(widgets["horusUDPEntry"].text())
         default_config["audio_device"] = widgets["audioDeviceSelector"].currentText()
         default_config["modem"] = widgets["horusModemSelector"].currentText()
+        default_config["baud_rate"] = int(widgets["horusModemRateSelector"].currentText())
 
         # Write out to config file
         write_config()
