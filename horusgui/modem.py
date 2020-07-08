@@ -19,6 +19,13 @@ HORUS_MODEM_LIST = {
         "default_tone_spacing": 425,
         "use_mask_estimator": False,
     },
+    "RTTY (8N2)": {
+        "id": Mode.RTTY_8N2,
+        "baud_rates": [50, 75, 100, 300, 600, 1000],
+        "default_baud_rate": 100,
+        "default_tone_spacing": 425,
+        "use_mask_estimator": False,
+    },
 }
 
 DEFAULT_MODEM = "Horus Binary v1 (Legacy)"
