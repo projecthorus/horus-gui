@@ -6,10 +6,11 @@ Telemetry demodulator for the following modems in use by Project Horus
   * v2 - 16/32-byte modes, LDPC FEC (Still in development)
 * RTTY (7N2 only, for now)
 
-
 Written by Mark Jessop <vk5qi@rfhead.net>
 
 **Note: This is very much a work in progress!**
+
+![Screenshot](doc/horusgui_screenshot.png)
 
 
 ### TODO LIST - Important Stuff
