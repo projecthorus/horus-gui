@@ -30,6 +30,7 @@ from .modem import *
 from .config import *
 from .habitat import *
 from .utils import position_info
+from .icon import getHorusIcon
 from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
@@ -71,6 +72,7 @@ win = QtGui.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 win.setWindowTitle("Horus Telemetry GUI")
+win.setWindowIcon(getHorusIcon())
 
 # Create multiple dock areas, for displaying our data.
 d0 = Dock("Audio", size=(300, 50))
@@ -78,8 +80,8 @@ d0_modem = Dock("Modem", size=(300, 80))
 d0_habitat = Dock("Habitat", size=(300, 200))
 d0_other = Dock("Other", size=(300, 100))
 d1 = Dock("Spectrum", size=(800, 350))
-d2_stats = Dock("Modem Stats", size=(70, 300))
-d2_snr = Dock("SNR", size=(730, 300))
+d2_stats = Dock("SNR (dB)", size=(50, 300))
+d2_snr = Dock("SNR Plot", size=(750, 300))
 d3_data = Dock("Data", size=(800, 50))
 d3_position = Dock("Position", size=(800, 50))
 d4 = Dock("Log", size=(800, 150))
@@ -244,10 +246,19 @@ widgets["spectrumPlotRange"] = [-100, -20]
 
 
 w3_stats = pg.LayoutWidget()
-widgets["snrLabel"] = QtGui.QLabel("<b>SNR:</b> --.- dB")
-widgets["snrLabel"].setWordWrap(True);
-widgets["snrLabel"].setFont(QtGui.QFont("Courier New", 18))
-w3_stats.addWidget(widgets["snrLabel"], 0, 0, 2, 1)
+widgets["snrBar"] = QtWidgets.QProgressBar()
+widgets["snrBar"].setOrientation(QtCore.Qt.Vertical)
+widgets["snrBar"].setRange(-10, 15)
+widgets["snrBar"].setValue(-10)
+widgets["snrBar"].setTextVisible(False)
+widgets["snrBar"].setAlignment(QtCore.Qt.AlignCenter)
+widgets["snrLabel"] = QtGui.QLabel("--.-")
+widgets["snrLabel"].setAlignment(QtCore.Qt.AlignCenter);
+widgets["snrLabel"].setFont(QtGui.QFont("Courier New", 14))
+w3_stats.addWidget(widgets["snrBar"], 0, 1, 1, 1)
+w3_stats.addWidget(widgets["snrLabel"], 1, 0, 1, 3)
+w3_stats.layout.setColumnStretch(0, 2)
+w3_stats.layout.setColumnStretch(2, 2)
 
 d2_stats.addWidget(w3_stats)
 
@@ -384,7 +395,7 @@ habitat_uploader = HabitatUploader(
     user_callsign=widgets["userCallEntry"].text(),
     listener_lat=widgets["userLatEntry"].text(),
     listener_lon=widgets["userLonEntry"].text(),
-    listener_radio=widgets["userRadioEntry"].text(),
+    listener_radio="Horus-GUI v" + __version__ + " " + widgets["userRadioEntry"].text(),
     listener_antenna=widgets["userAntennaEntry"].text(),
 )
 
@@ -396,7 +407,7 @@ def habitat_position_reupload():
     habitat_uploader.user_callsign = widgets["userCallEntry"].text()
     habitat_uploader.listener_lat = widgets["userLatEntry"].text()
     habitat_uploader.listener_lon = widgets["userLonEntry"].text()
-    habitat_uploader.listener_radio = widgets["userRadioEntry"].text()
+    habitat_uploader.listener_radio = "Horus-GUI v" + __version__ + " " + widgets["userRadioEntry"].text()
     habitat_uploader.listener_antenna = widgets["userAntennaEntry"].text()
     habitat_uploader.trigger_position_upload()
 
@@ -464,7 +475,9 @@ def handle_status_update(status):
         widgets["snrPlotRange"][0], _new_max+10 
     )
 
-    widgets["snrLabel"].setText(f"<b>SNR:</b> {float(status.snr):2.1f} dB")
+    # Update SNR bar and label
+    widgets["snrLabel"].setText(f"{float(status.snr):2.1f}")
+    widgets["snrBar"].setValue(int(status.snr))
 
 
 

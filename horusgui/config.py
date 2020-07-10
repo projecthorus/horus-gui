@@ -23,7 +23,7 @@ default_config = {
     "habitat_lat": 0.0,
     "habitat_lon": 0.0,
     "habitat_antenna": "",
-    "habitat_radio": "Horus-GUI " + __version__,
+    "habitat_radio": "",
     "horus_udp_enabled": True,
     "horus_udp_port": 55672,
 }
