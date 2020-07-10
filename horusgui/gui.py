@@ -691,6 +691,9 @@ def processQueues():
 
         handle_status_update(_status)
 
+    # Try and force a re-draw.
+    QtGui.QApplication.processEvents()
+
     if not decoder_init:
         # Initialise decoders, and other libraries here.
         try:
@@ -718,8 +721,11 @@ class ConsoleHandler(logging.Handler):
         _time = datetime.datetime.now()
         _text = f"{_time.strftime('%H:%M:%S')} [{record.levelname}]  {record.msg}"
         self.consolewidget.appendPlainText(_text)
+        # Make sure the scroll bar is right at the bottom.
+        _sb = self.consolewidget.verticalScrollBar()
+        _sb.setValue(_sb.maximum())
         # Redraw
-        QtGui.QApplication.processEvents()
+        self.consolewidget.repaint()
 
 
 # Add console handler to top level logger.
