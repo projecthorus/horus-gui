@@ -45,6 +45,7 @@ widgets = {}
 # Queues for handling updates to image / status indications.
 fft_update_queue = Queue(256)
 status_update_queue = Queue(256)
+log_update_queue = Queue(256)
 
 # List of audio devices and their info
 audio_devices = {}
@@ -676,6 +677,15 @@ def start_decoding():
 widgets["startDecodeButton"].clicked.connect(start_decoding)
 
 
+def handle_log_update(log_update):
+    global widgets
+
+    widgets["console"].appendPlainText(log_update)
+    # Make sure the scroll bar is right at the bottom.
+    _sb = widgets["console"].verticalScrollBar()
+    _sb.setValue(_sb.maximum())
+
+
 # GUI Update Loop
 def processQueues():
     """ Read in data from the queues, this decouples the GUI and async inputs somewhat. """
@@ -690,6 +700,11 @@ def processQueues():
         _status = status_update_queue.get()
 
         handle_status_update(_status)
+
+    while log_update_queue.qsize() > 0:
+        _log = log_update_queue.get()
+        
+        handle_log_update(_log)
 
     # Try and force a re-draw.
     QtGui.QApplication.processEvents()
@@ -713,23 +728,23 @@ gui_update_timer.start(100)
 class ConsoleHandler(logging.Handler):
     """ Logging handler to write to the GUI console """
 
-    def __init__(self, consolewidget):
+    def __init__(self, log_queue):
         logging.Handler.__init__(self)
-        self.consolewidget = consolewidget
+        self.log_queue = log_queue
 
     def emit(self, record):
         _time = datetime.datetime.now()
         _text = f"{_time.strftime('%H:%M:%S')} [{record.levelname}]  {record.msg}"
-        self.consolewidget.appendPlainText(_text)
-        # Make sure the scroll bar is right at the bottom.
-        _sb = self.consolewidget.verticalScrollBar()
-        _sb.setValue(_sb.maximum())
-        # Redraw
-        self.consolewidget.repaint()
+
+        try:
+            self.log_queue.put_nowait(_text)
+        except:
+            print("Queue full!")
+
 
 
 # Add console handler to top level logger.
-console_handler = ConsoleHandler(widgets["console"])
+console_handler = ConsoleHandler(log_update_queue)
 logging.getLogger().addHandler(console_handler)
 
 
