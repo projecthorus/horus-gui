@@ -4,9 +4,13 @@ Telemetry demodulator for the following modems in use by Project Horus
 * Horus Binary Modes
   * v1 - Legacy 22 byte mode, Golay FEC
   * v2 - 16/32-byte modes, LDPC FEC (Still in development)
-* RTTY (7N2 only, for now)
+* RTTY (7N2 and 8N2)
 
-Written by Mark Jessop <vk5qi@rfhead.net>
+Written by: 
+* GUI & Glue Code - Mark Jessop <vk5qi@rfhead.net>
+* FSK Modem - David Rowe <david@rowetel.com>
+* FSK Modem Wrapper - Xssfox
+* LDPC Codes - Bill Cowley
 
 **Note: This is very much a work in progress!**
 
@@ -14,18 +18,18 @@ Written by Mark Jessop <vk5qi@rfhead.net>
 
 
 ### TODO LIST - Important Stuff
-* Stop decoded data pane from resizing on bad/long decodes - TODO
+* Fix display redraw issues under windows.
 * Export of telemetry via Horus UDP
-* Better build system 
-* Windows binary
+* Better build system via Travis (@xssfox)
 
 ### TODO LIST - Extras
 * UDP input from GQRX
 * Waterfall Display  (? Need something GPU accelerated if possible...)
+* rotctld rotator control?
 
 ## Usage
 
-### Build HorusLib
+### Build HorusDemodLib
 
 ```console
 $ git clone https://github.com/projecthorus/horusdemodlib.git
@@ -75,4 +79,9 @@ entry points so it can be used like a normal install.
 ### Run
 ```console
 $ python -m horusgui.gui
+```
+
+Or run the helper startup script:
+```console
+$ python horus-gui.py
 ```
