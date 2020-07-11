@@ -54,6 +54,8 @@ $ source venv/bin/activate
 (venv) $ pip install pip -U       (Optional - this updates pip)
 ```
 
+If not using a venv, you may need to replace `pip` with `pip3`, and `python` with `python3` below to ensure you are using Python3. Older linux distributions will likely have both Python 2.7 and Python 3 installed - this software only supports Python 3. 
+
 ### Install Python Dependencies
 ```console
 $ pip install -r requirements.txt
