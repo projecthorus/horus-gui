@@ -31,7 +31,6 @@ from .config import *
 from .habitat import *
 from .utils import position_info
 from .icon import getHorusIcon
-from .horusudp import send_payload_summary
 from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
