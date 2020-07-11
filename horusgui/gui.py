@@ -35,6 +35,7 @@ from .horusudp import send_payload_summary
 from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
+from horusdemodlib.horusudp import send_payload_summary
 from . import __version__
 
 # Setup Logging
