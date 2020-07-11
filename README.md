@@ -1,15 +1,17 @@
 # Project Horus Telemetry Decoder
 
 Telemetry demodulator for the following modems in use by Project Horus
-* Horus Binary Modes
+* Horus Binary Modes (4FSK)
   * v1 - Legacy 22 byte mode, Golay FEC
   * v2 - 16/32-byte modes, LDPC FEC (Still in development)
-* RTTY (7N2 and 8N2)
+* RTTY (7N2 and 8N2, standard UKHAS sentences with CRC16 only)
+
+This project serves as a graphical front-end to [horusdemodlib](https://github.com/projecthorus/horusdemodlib) a Python/C library of telemetry demodulators based off the [codec2](https://github.com/drowe67/codec2) FSK modem. The core modem used in this library is very well tested, and performs in line with incoherent FSK demodulator theory. The RTTY decoder is approximately [2dB better](http://www.rowetel.com/?p=5906) than dl-fldigi, and the Horus Binary v1 modem approximately 7 dB better again. Once finished, the Horus Binary v2 modes should provide an additional few dB more performance yet again.
 
 Written by: 
 * GUI & Glue Code - Mark Jessop <vk5qi@rfhead.net>
 * FSK Modem - David Rowe <david@rowetel.com>
-* FSK Modem Wrapper - Xssfox
+* FSK Modem Wrapper - XSSFox
 * LDPC Codes - Bill Cowley
 
 **Note: This is very much a work in progress!**
@@ -18,8 +20,6 @@ Written by:
 
 
 ### TODO LIST - Important Stuff
-* Fix display redraw issues under windows.
-* Export of telemetry via Horus UDP
 * Better build system via Travis (@xssfox)
 
 ### TODO LIST - Extras
@@ -85,3 +85,24 @@ Or run the helper startup script:
 ```console
 $ python horus-gui.py
 ```
+
+## Updating
+As this repository is under regular development, you will likely need to update frequently.
+This means updating both this repository, and horusdemodlib, on which it depends.
+
+```console
+$ cd ~/horusdemodlib
+$ git pull
+$ rm -rf build
+$ cd horusdemodlib && mkdir build && cd build
+$ cmake ..
+$ make
+$ make install
+
+$ cd ~/horus-gui
+# git pull
+$ . venv/bin/activate  (if using a venv)
+$ pip install horusdemodlib --upgrade
+```
+
+You should then be OK to run horusgui. Configuration settings will be reset when the version number of horus-gui is incremented, until I settle on on a configuration parameter set.
