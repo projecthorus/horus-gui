@@ -31,6 +31,7 @@ from .config import *
 from .habitat import *
 from .utils import position_info
 from .icon import getHorusIcon
+from .horusudp import send_payload_summary
 from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
@@ -110,9 +111,9 @@ widgets["audioSampleRateLabel"] = QtGui.QLabel("<b>Sample Rate (Hz):</b>")
 widgets["audioSampleRateSelector"] = QtGui.QComboBox()
 
 w1_audio.addWidget(widgets["audioDeviceLabel"], 0, 0, 1, 1)
-w1_audio.addWidget(widgets["audioDeviceSelector"], 0, 1, 1, 1)
+w1_audio.addWidget(widgets["audioDeviceSelector"], 0, 1, 1, 2)
 w1_audio.addWidget(widgets["audioSampleRateLabel"], 1, 0, 1, 1)
-w1_audio.addWidget(widgets["audioSampleRateSelector"], 1, 1, 1, 1)
+w1_audio.addWidget(widgets["audioSampleRateSelector"], 1, 1, 1, 2)
 
 d0.addWidget(w1_audio)
 
@@ -573,6 +574,15 @@ def handle_new_packet(frame):
                     widgets['latestPacketRangeValue'].setText(f"{_position_info['straight_distance']/1000.0:.1f}")
             except Exception as e:
                 logging.error(f"Could not calculate relative position to payload - {str(e)}")
+            
+            # Send data out via Horus UDP
+            if widgets["horusUploadSelector"].isChecked():
+                _udp_port = int(widgets["horusUDPEntry"].text())
+                # Add in SNR data
+                _snr = float(widgets["snrLabel"].text())
+                _decoded['snr'] = _snr
+
+                send_payload_summary(_decoded, port=_udp_port)
 
 
 
