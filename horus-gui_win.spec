@@ -4,8 +4,8 @@ block_cipher = None
 
 
 a = Analysis(['horus-gui.py'],
-             pathex=['C:\\HAB\\horus-gui'],
-             binaries=[('libhorus.dll','.')],
+             pathex=['.'],
+             binaries=[('libhorus.dll','.'),('libgcc_s_seh-1.dll','.'),('libwinpthread-1.dll','.'),('libstdc++-6.dll','.')],
              datas=[],
              hiddenimports=['pkg_resources.py2_warn'],
              hookspath=[],

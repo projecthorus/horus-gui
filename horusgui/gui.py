@@ -25,6 +25,7 @@ from threading import Thread
 
 from .widgets import *
 from .audio import *
+from .udpaudio import *
 from .fft import *
 from .modem import *
 from .config import *
@@ -73,7 +74,7 @@ pg.mkQApp()
 win = QtGui.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
-win.setWindowTitle("Horus Telemetry GUI")
+win.setWindowTitle(f"Horus Telemetry GUI - v{__version__}")
 win.setWindowIcon(getHorusIcon())
 
 # Create multiple dock areas, for displaying our data.
@@ -599,8 +600,12 @@ def start_decoding():
     if not running:
         # Grab settings off widgets
         _dev_name = widgets["audioDeviceSelector"].currentText()
-        _sample_rate = int(widgets["audioSampleRateSelector"].currentText())
-        _dev_index = audio_devices[_dev_name]["index"]
+        if _dev_name != 'GQRX UDP':
+            _sample_rate = int(widgets["audioSampleRateSelector"].currentText())
+            _dev_index = audio_devices[_dev_name]["index"]
+        else:
+            # Override sample rate for GQRX UDP input.
+            _sample_rate = 48000
 
         # Grab Horus Settings
         _modem_name = widgets["horusModemSelector"].currentText()
@@ -647,18 +652,29 @@ def start_decoding():
             mode=_modem_id,
             rate=_modem_rate,
             tone_spacing=_modem_tone_spacing,
-            callback=handle_new_packet
+            callback=handle_new_packet,
+            sample_rate=_sample_rate
         )
 
-        # Setup Audio
-        audio_stream = AudioStream(
-            _dev_index,
-            fs=_sample_rate,
-            block_size=fft_process.stride,
-            fft_input=fft_process.add_samples,
-            modem=horus_modem,
-            stats_callback=add_stats_update
-        )
+        # Setup Audio (or UDP input)
+        if _dev_name == 'GQRX UDP':
+            audio_stream = UDPStream(
+                udp_port=7355,
+                fs=_sample_rate,
+                block_size=fft_process.stride,
+                fft_input=fft_process.add_samples,
+                modem=horus_modem,
+                stats_callback=add_stats_update
+            )
+        else:
+            audio_stream = AudioStream(
+                _dev_index,
+                fs=_sample_rate,
+                block_size=fft_process.stride,
+                fft_input=fft_process.add_samples,
+                modem=horus_modem,
+                stats_callback=add_stats_update
+            )
 
         widgets["startDecodeButton"].setText("Stop")
         running = True

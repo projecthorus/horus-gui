@@ -20,6 +20,8 @@ def init_audio(widgets):
 
     # Clear list
     widgets["audioDeviceSelector"].clear()
+    # Add in the 'dummy' GQRX UDP interface
+    widgets["audioDeviceSelector"].addItem('GQRX UDP')
 
     # Iterate through PyAudio devices
     for x in range(0, pyAudio.get_device_count()):
@@ -53,6 +55,11 @@ def populate_sample_rates(widgets):
 
     # Get information on current audio device
     _dev_name = widgets["audioDeviceSelector"].currentText()
+
+    # Add in fixed sample rate for GQRX input.
+    if _dev_name == 'GQRX UDP':
+        widgets["audioSampleRateSelector"].addItem(str(48000))
+        widgets["audioSampleRateSelector"].setCurrentIndex(0)
 
     if _dev_name in audioDevices:
         # TODO: Determine valid samples rates. For now, just use the default.

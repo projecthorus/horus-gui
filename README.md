@@ -19,11 +19,14 @@ Written by:
 ![Screenshot](doc/horusgui_screenshot.png)
 
 
+### Known Issues
+* Occasional crash when processing is stopped just as a packet is being processed by horus_api.
+* Queue events not processed on OSX when the application is running in the background.
+
 ### TODO LIST - Important Stuff
 * Better build system via Travis (@xssfox)
 
 ### TODO LIST - Extras
-* UDP input from GQRX
 * Waterfall Display  (? Need something GPU accelerated if possible...)
 * rotctld rotator control?
 
