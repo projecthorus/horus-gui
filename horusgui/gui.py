@@ -443,10 +443,10 @@ def handle_fft_update(data):
     _new_max = float((_old_max * (1 - _tc)) + (np.max(_data) * _tc))
 
     # Store new max
-    widgets["spectrumPlotRange"][1] = _new_max
+    widgets["spectrumPlotRange"][1] = max(widgets["spectrumPlotRange"][0], _new_max)
 
     widgets["spectrumPlot"].setYRange(
-        widgets["spectrumPlotRange"][0], min(0, _new_max) + 20
+        widgets["spectrumPlotRange"][0], widgets["spectrumPlotRange"][1] + 20
     )
 
 def handle_status_update(status):
