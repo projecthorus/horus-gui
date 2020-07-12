@@ -588,6 +588,12 @@ def handle_new_packet(frame):
 
 
 def start_decoding():
+    """
+    Read settings from the GUI
+    Set up all elements of the decode chain
+    Start decoding!
+    (Or, stop decoding)
+    """
     global widgets, audio_stream, fft_process, horus_modem, habitat_uploader, audio_devices, running, fft_update_queue, status_update_queue
 
     if not running:
@@ -659,7 +665,6 @@ def start_decoding():
         logging.info("Started Audio Processing.")
 
     else:
-
         try:
             audio_stream.stop()
         except Exception as e:
@@ -721,11 +726,7 @@ def processQueues():
 
     if not decoder_init:
         # Initialise decoders, and other libraries here.
-        try:
-            init_payload_id_list()
-            init_custom_field_list()
-        except Exception as e:
-            logging.error(f"Error downloading payload/field lists: {str(e)}")
+        init_payloads()
         decoder_init = True
         # Once initialised, enable the start button
         widgets["startDecodeButton"].setEnabled(True)

@@ -4,14 +4,15 @@
 #
 #   Mark Jessop <vk5qi@rfhead.net>
 #
-
+import json
 import logging
 import os
 from pyqtgraph.Qt import QtCore
 from ruamel.yaml import YAML
 from . import __version__
 from .modem import populate_modem_settings
-
+from horusdemodlib.payloads import download_latest_payload_id_list, download_latest_custom_field_list
+import horusdemodlib.payloads
 
 default_config = {
     "version": __version__,
@@ -26,11 +27,14 @@ default_config = {
     "habitat_radio": "",
     "horus_udp_enabled": True,
     "horus_udp_port": 55672,
+    "payload_list": json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST),
+    "custom_field_list": json.dumps({})
 }
 
 qt_settings = QtCore.QSettings("Project Horus", "Horus-GUI")
 
 def ValueToBool(Value):
+    """ Helper function to deal with QSettings inconsistency in handling boolean values """
     if isinstance(Value, bool):
         RetVal = Value
     else:
@@ -54,7 +58,7 @@ def write_config():
     for _setting in default_config:
         qt_settings.setValue(_setting, default_config[_setting])
     
-    logging.debug("Wrote configuration state into QSettings")
+    logging.info("Current configuration saved.")
 
 
 def read_config(widgets):
@@ -94,6 +98,18 @@ def read_config(widgets):
             widgets["horusModemRateSelector"].setCurrentText(str(default_config['baud_rate']))
 
 
+    if 'payload_list' in default_config:
+        _payloads = json.loads(default_config['payload_list'])
+        # JSON converts the int dictionary keys into strings... annoying!
+        _temp = {}
+        for _key in _payloads:
+            _temp[int(_key)] = _payloads[_key]
+        
+        default_config['payload_list'] = _temp
+
+
+
+
 
 def save_config(widgets):
     """ Write out settings to a config file """
@@ -114,8 +130,69 @@ def save_config(widgets):
         default_config["modem"] = widgets["horusModemSelector"].currentText()
         default_config["baud_rate"] = int(widgets["horusModemRateSelector"].currentText())
 
+        default_config["payload_list"] = json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST)
+        default_config["custom_field_list"] = json.dumps(horusdemodlib.payloads.HORUS_CUSTOM_FIELDS)
+
         # Write out to config file
         write_config()
+
+
+def init_payloads():
+    """ Attempt to download the latest payload / config data, and update local configs """
+    global default_config
+
+    # Attempt to grab the payload list.
+    _payload_list = download_latest_payload_id_list()
+    if _payload_list:
+        # Sanity check the result
+        if 0 in _payload_list:
+            horusdemodlib.payloads.HORUS_PAYLOAD_LIST = _payload_list
+            logging.info(f"Updated Payload List Successfuly!")
+        else:
+            logging.critical("Could not read downloaded payload list!")
+    else:
+        if 'payload_list' in default_config:
+            # Maybe we have a stored config we can use.
+            try:
+                _payload_list = default_config['payload_list']
+                if 0 in _payload_list:
+                    horusdemodlib.payloads.HORUS_PAYLOAD_LIST = _payload_list
+                    logging.warning(f"Loaded Payload List from local cache, may be out of date!")
+                else:
+                    logging.critical("Could not read stored payload list!")
+            except Exception as e:
+                logging.critical(f"Could not read stored payload list - {str(e)}")
+        else:
+            logging.critical("Payload list not available in local storage!")
+
+    logging.info(f"Payload List contains {len(list(horusdemodlib.payloads.HORUS_PAYLOAD_LIST.keys()))} entries.")
+
+    _custom_fields = download_latest_custom_field_list()
+    if _custom_fields:
+        # Sanity Check
+        if 'HORUSTEST' in _custom_fields:
+            horusdemodlib.payloads.HORUS_CUSTOM_FIELDS = _custom_fields
+            logging.info(f"Updated Custom Field List Successfuly!")
+        else:
+            logging.critical("Could not read downloaded custom field list!")
+    else:
+        if 'custom_field_list' in default_config:
+            # Maybe we have a stored config we can use.
+            try:
+                _custom_fields = json.loads(default_config['custom_field_list'])
+                if 'HORUSTEST' in _custom_fields:
+                    horusdemodlib.payloads.HORUS_CUSTOM_FIELDS = _custom_fields
+                    logging.warning("Loaded Custom Fields List from local cache, may be out of date!")
+                else:
+                    logging.critical("Could not read stored custom fields list!")
+            except Exception as e:
+                logging.critical(f"Could not read stored custom fields list - {str(e)}")
+        else:
+            logging.critical("Custom Field list not available in local storage!")
+    
+    logging.info(f"Custom Field list contains {len(list(horusdemodlib.payloads.HORUS_CUSTOM_FIELDS.keys()))} entries.")
+
+
 
 
 if __name__ == "__main__":
