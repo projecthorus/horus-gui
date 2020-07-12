@@ -64,7 +64,8 @@ def populate_sample_rates(widgets):
     if _dev_name in audioDevices:
         # TODO: Determine valid samples rates. For now, just use the default.
         # TODO: Add support for resampling.
-        _samp_rate = 48000 # int(audioDevices[_dev_name]["defaultSampleRate"])
+        #_samp_rate = 48000 # 
+        _samp_rate = int(audioDevices[_dev_name]["defaultSampleRate"])
         widgets["audioSampleRateSelector"].addItem(str(_samp_rate))
         widgets["audioSampleRateSelector"].setCurrentIndex(0)
     else:
