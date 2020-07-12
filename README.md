@@ -10,7 +10,7 @@ This project serves as a graphical front-end to [horusdemodlib](https://github.c
 
 Written by: 
 * GUI & Glue Code - Mark Jessop <vk5qi@rfhead.net>
-* FSK Modem - David Rowe <david@rowetel.com>
+* FSK Modem - David Rowe
 * FSK Modem Wrapper - XSSFox
 * LDPC Codes - Bill Cowley
 
@@ -28,6 +28,11 @@ Written by:
 * rotctld rotator control?
 
 ## Usage
+
+### Binary Builds
+Until we sort out automated release builds, some very early binary builds for Windows and OSX are available here: https://rfhead.net/horus/horusgui/
+
+Please let me know if you have success using these! 
 
 ### Build HorusDemodLib
 
