@@ -48,7 +48,7 @@ def init_audio(widgets):
 
 def populate_sample_rates(widgets):
     """ Populate the sample rate ComboBox with the sample rates of the currently selected audio device """
-    global audioDevices
+    global audioDevices, pyAudio
 
     # Clear list of sample rates.
     widgets["audioSampleRateSelector"].clear()
@@ -56,18 +56,29 @@ def populate_sample_rates(widgets):
     # Get information on current audio device
     _dev_name = widgets["audioDeviceSelector"].currentText()
 
-    # Add in fixed sample rate for GQRX input.
+    
     if _dev_name == 'GQRX UDP':
+        # Add in fixed sample rate for GQRX input, which only outputs at 48 kHz.
         widgets["audioSampleRateSelector"].addItem(str(48000))
         widgets["audioSampleRateSelector"].setCurrentIndex(0)
 
     if _dev_name in audioDevices:
-        # TODO: Determine valid samples rates. For now, just use the default.
-        # TODO: Add support for resampling.
-        #_samp_rate = 48000 # 
-        _samp_rate = int(audioDevices[_dev_name]["defaultSampleRate"])
-        widgets["audioSampleRateSelector"].addItem(str(_samp_rate))
-        widgets["audioSampleRateSelector"].setCurrentIndex(0)
+        # Determine which sample rates from a common list are valid for this device.
+        _possible_rates = [8000.0, 22050.0, 44100.0, 48000.0, 96000.0]
+        for _rate in _possible_rates:
+            _dev_info = audioDevices[_dev_name]
+            _valid = pyAudio.is_format_supported(
+                _rate,
+                input_device=_dev_info['index'],
+                input_channels=1,
+                input_format=pyaudio.paInt16
+            )
+            if _valid:
+                widgets["audioSampleRateSelector"].addItem(str(int(_rate)))
+
+        # Pick the default one.
+        _default_samp_rate = int(audioDevices[_dev_name]["defaultSampleRate"])
+        widgets["audioSampleRateSelector"].setCurrentText(str(_default_samp_rate))
     else:
         logging.error("Audio - Unknown Audio Device")
 

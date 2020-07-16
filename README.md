@@ -2,11 +2,24 @@
 
 Telemetry demodulator for the following modems in use by Project Horus
 * Horus Binary Modes (4FSK)
-  * v1 - Legacy 22 byte mode, Golay FEC
-  * v2 - 16/32-byte modes, LDPC FEC (Still in development)
-* RTTY (7N2 and 8N2, standard UKHAS sentences with CRC16 only)
+  * v1 - Legacy 22 byte mode, Golay(23,12) FEC
+  * v2 - 16/32-byte modes, LDPC FEC (Under development)
+* RTTY (7N1, 7N2 and 8N2, standard [UKHAS sentences](https://ukhas.org.uk/communication:protocol) with CRC16 only)
 
-This project serves as a graphical front-end to [horusdemodlib](https://github.com/projecthorus/horusdemodlib) a Python/C library of telemetry demodulators based off the [codec2](https://github.com/drowe67/codec2) FSK modem. The core modem used in this library is very well tested, and performs in line with incoherent FSK demodulator theory. The RTTY decoder is approximately [2dB better](http://www.rowetel.com/?p=5906) than dl-fldigi, and the Horus Binary v1 modem approximately 7 dB better again. Once finished, the Horus Binary v2 modes should provide an additional few dB more performance yet again.
+This project serves as a graphical front-end to [horusdemodlib](https://github.com/projecthorus/horusdemodlib) a Python/C library of telemetry demodulators based off the [codec2](https://github.com/drowe67/codec2) FSK modem. The core modem used in this library is very well tested, and performs in line with incoherent FSK demodulator theory. The RTTY decoder is approximately [2dB better](http://www.rowetel.com/?p=5906) than dl-fldigi, and the Horus Binary v1 modem approximately 7 dB better again. Once finished, the Horus Binary v2 modes should provide more flexibility over the v1 mode, and provide further performance improvements.
+
+### Important Performance Notes
+The FSK demodulator at the core of this application expects the transmitter to behave like a modem. That is, it should:
+* Have a symbol rate which is close to the desired symbol rate (within +/- 1000 ppm).
+* Maintain that symbol rate throughout a transmission (i.e. not drift in symbol rate across a transmission)
+* Not have gaps between transmitted bytes.
+* Not drift a lot in frequency during a transmission (a few Hz/sec is probably OK - this needs to be tested further)
+
+All of the above are achievable from a small microcontroller such as an Arduino. The use of [interrupts](https://ukhas.org.uk/guides:interrupt_driven_rtty) (instead of sleep statements) to control symbol timing is recommended. Raspberry Pi UARTs (in particular the 'mini-UART') are known to have gaps between transmitter bytes, so be warned!
+
+If you are having issues decoding telemetry from your payload, then carefully investigate the above points. If you are still having issues, then please contact me with a recording via the e-mail address below.
+
+### Authors
 
 Written by: 
 * GUI & Glue Code - Mark Jessop <vk5qi@rfhead.net>
@@ -14,21 +27,18 @@ Written by:
 * FSK Modem Wrapper - XSSFox
 * LDPC Codes - Bill Cowley
 
-**Note: This is very much a work in progress!**
-
 ![Screenshot](doc/horusgui_screenshot.png)
-
 
 ### Known Issues
 * Occasional crash when processing is stopped just as a packet is being processed by horus_api.
 * Queue events not processed on OSX when the application is running in the background.
 
-### TODO LIST - Important Stuff
-* Better build system via Travis (@xssfox)
-
-### TODO LIST - Extras
-* Waterfall Display  (? Need something GPU accelerated if possible...)
-* rotctld rotator control?
+### TODO LIST
+* Important Things
+  * Better build system via Travis (@xssfox)
+* Extras
+  * Waterfall Display  (? Need something GPU accelerated if possible...)
+  * rotctld rotator control?
 
 ## Usage
 
@@ -96,9 +106,8 @@ Or run the helper startup script:
 $ python horus-gui.py
 ```
 
-## Updating
-As this repository is under regular development, you will likely need to update frequently.
-This means updating both this repository, and horusdemodlib, on which it depends.
+### Updating
+As this repository is under regular development, you will likely need to update frequently. For those using the binary builds, this just means downloading a new file and running it. If you're running from source, this means updating both this repository, and horusdemodlib, on which it depends.
 
 ```console
 $ cd ~/horusdemodlib

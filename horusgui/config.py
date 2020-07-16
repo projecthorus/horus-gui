@@ -11,12 +11,14 @@ from pyqtgraph.Qt import QtCore
 from ruamel.yaml import YAML
 from . import __version__
 from .modem import populate_modem_settings
+from .audio import populate_sample_rates
 from horusdemodlib.payloads import download_latest_payload_id_list, download_latest_custom_field_list
 import horusdemodlib.payloads
 
 default_config = {
     "version": __version__,
     "audio_device": "None",
+    "audio_sample_rate": "48000",
     "modem": "Horus Binary v1 (Legacy)",
     "baud_rate": -1,
     "habitat_upload_enabled": True,
@@ -89,6 +91,11 @@ def read_config(widgets):
         # Try and set the audio device.
         # If the audio device is not in the available list of devices, this will fail silently.
         widgets["audioDeviceSelector"].setCurrentText(default_config["audio_device"])
+        # Populate the list of valid sample rates
+        populate_sample_rates(widgets)
+        # Attempt to set the configured sample rate. This will fail silently if it does not exist.
+        widgets["audioSampleRateSelector"].setCurrentText(str(default_config["audio_sample_rate"]))
+
         # Try and set the modem. If the modem is not valid, this will fail silently.
         widgets["horusModemSelector"].setCurrentText(default_config["modem"])
         # Populate the default settings.
@@ -127,6 +134,7 @@ def save_config(widgets):
         default_config["horus_udp_enabled"] = widgets["horusUploadSelector"].isChecked()
         default_config["horus_udp_port"] = int(widgets["horusUDPEntry"].text())
         default_config["audio_device"] = widgets["audioDeviceSelector"].currentText()
+        default_config["audio_sample_rate"] = widgets["audioSampleRateSelector"].currentText()
         default_config["modem"] = widgets["horusModemSelector"].currentText()
         default_config["baud_rate"] = int(widgets["horusModemRateSelector"].currentText())
 
