@@ -67,12 +67,18 @@ def populate_sample_rates(widgets):
         _possible_rates = [8000.0, 22050.0, 44100.0, 48000.0, 96000.0]
         for _rate in _possible_rates:
             _dev_info = audioDevices[_dev_name]
-            _valid = pyAudio.is_format_supported(
-                _rate,
-                input_device=_dev_info['index'],
-                input_channels=1,
-                input_format=pyaudio.paInt16
-            )
+            _valid = False
+            try:
+                _valid = pyAudio.is_format_supported(
+                    _rate,
+                    input_device=_dev_info['index'],
+                    input_channels=1,
+                    input_format=pyaudio.paInt16
+                )
+            except ValueError:
+                # Why oh why do you throw an exception instead of returning FALSE pyaudio...
+                _valid = False
+            
             if _valid:
                 widgets["audioSampleRateSelector"].addItem(str(int(_rate)))
 
