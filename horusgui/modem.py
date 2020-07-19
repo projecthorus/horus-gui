@@ -7,7 +7,7 @@ from horusdemodlib.demod import Mode
 HORUS_MODEM_LIST = {
     "Horus Binary v1 (Legacy)": {
         "id": Mode.BINARY_V1,
-        "baud_rates": [50, 100, 300],
+        "baud_rates": [25, 50, 100, 300],
         "default_baud_rate": 100,
         "default_tone_spacing": 270,
         "use_mask_estimator": False,

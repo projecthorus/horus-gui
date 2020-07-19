@@ -22,10 +22,10 @@ If you are having issues decoding telemetry from your payload, then carefully in
 ### Authors
 
 Written by: 
-* GUI & Glue Code - Mark Jessop <vk5qi@rfhead.net>
-* FSK Modem - David Rowe
-* FSK Modem Wrapper - XSSFox
-* LDPC Codes - Bill Cowley
+* Python Library - Mark Jessop <vk5qi@rfhead.net>
+* FSK Modem - [David Rowe](http://rowetel.com)
+* FSK Modem Python Wrapper - [XSSFox](https://twitter.com/xssfox)
+* LDPC Codes - [Bill Cowley](http://lowsnr.org/)
 
 ![Screenshot](doc/horusgui_screenshot.png)
 
