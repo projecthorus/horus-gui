@@ -41,6 +41,11 @@ from . import __version__
 # Setup Logging
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
+# A few hardcoded defaults
+DEFAULT_ESTIMATOR_MIN = 100
+DEFAULT_ESTIMATOR_MAX = 4000
+
+
 # Global widget store
 widgets = {}
 
@@ -132,6 +137,8 @@ widgets["horusMaskEstimatorSelector"] = QtGui.QCheckBox()
 
 widgets["horusMaskSpacingLabel"] = QtGui.QLabel("<b>Tone Spacing (Hz):</b>")
 widgets["horusMaskSpacingEntry"] = QtGui.QLineEdit("270")
+widgets["horusManualEstimatorLabel"] = QtGui.QLabel("<b>Manual Estim. Limits:</b>")
+widgets["horusManualEstimatorSelector"] = QtGui.QCheckBox()
 
 # Start/Stop
 widgets["startDecodeButton"] = QtGui.QPushButton("Start")
@@ -145,7 +152,9 @@ w1_modem.addWidget(widgets["horusMaskEstimatorLabel"], 2, 0, 1, 1)
 w1_modem.addWidget(widgets["horusMaskEstimatorSelector"], 2, 1, 1, 1)
 w1_modem.addWidget(widgets["horusMaskSpacingLabel"], 3, 0, 1, 1)
 w1_modem.addWidget(widgets["horusMaskSpacingEntry"], 3, 1, 1, 1)
-w1_modem.addWidget(widgets["startDecodeButton"], 4, 0, 2, 2)
+w1_modem.addWidget(widgets["horusManualEstimatorLabel"], 4, 0, 1, 1)
+w1_modem.addWidget(widgets["horusManualEstimatorSelector"], 4, 1, 1, 1)
+w1_modem.addWidget(widgets["startDecodeButton"], 5, 0, 2, 2)
 
 d0_modem.addWidget(w1_modem)
 
@@ -167,6 +176,7 @@ widgets["userAntennaEntry"] = QtGui.QLineEdit("")
 widgets["userRadioLabel"] = QtGui.QLabel("<b>Radio:</b>")
 widgets["userRadioEntry"] = QtGui.QLineEdit("Horus-GUI " + __version__)
 widgets["habitatUploadPosition"] = QtGui.QPushButton("Upload Position")
+widgets["saveSettingsButton"] = QtGui.QPushButton("Save Settings")
 
 w1_habitat.addWidget(widgets["habitatUploadLabel"], 0, 0, 1, 1)
 w1_habitat.addWidget(widgets["habitatUploadSelector"], 0, 1, 1, 1)
@@ -181,6 +191,7 @@ w1_habitat.addWidget(widgets["userRadioLabel"], 4, 0, 1, 1)
 w1_habitat.addWidget(widgets["userRadioEntry"], 4, 1, 1, 2)
 w1_habitat.addWidget(widgets["habitatUploadPosition"], 5, 0, 1, 3)
 w1_habitat.layout.setRowStretch(6, 1)
+w1_habitat.addWidget(widgets["saveSettingsButton"], 7, 0, 1, 3)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -242,6 +253,9 @@ widgets["spectrumPlot"].setXRange(100, 4000)
 widgets["spectrumPlot"].setYRange(-100, -20)
 widgets["spectrumPlot"].setLimits(xMin=100, xMax=4000, yMin=-120, yMax=0)
 widgets["spectrumPlot"].showGrid(True, True)
+
+widgets["estimatorRange"] = pg.LinearRegionItem([100,3000])
+widgets["estimatorRange"].setBounds([100,4000])
 
 d1.addWidget(widgets["spectrumPlot"])
 
@@ -403,6 +417,8 @@ habitat_uploader = HabitatUploader(
 )
 
 
+# Handlers for various checkboxes and push-buttons
+
 def habitat_position_reupload():
     """ Trigger a re-upload of user position information """
     global widgets, habitat_uploader
@@ -414,7 +430,6 @@ def habitat_position_reupload():
     habitat_uploader.listener_antenna = widgets["userAntennaEntry"].text()
     habitat_uploader.trigger_position_upload()
 
-
 widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
 
 
@@ -424,9 +439,51 @@ def habitat_inhibit():
     habitat_uploader.inhibit = not widgets["habitatUploadSelector"].isChecked()
     logging.debug(f"Updated Habitat Inhibit state: {habitat_uploader.inhibit}")
 
-
 widgets["habitatUploadSelector"].clicked.connect(habitat_inhibit)
 
+
+def update_manual_estimator():
+    """ Push a change to the manually defined estimator limits into the modem """
+    global widgets, horus_modem
+
+    _limits = widgets["estimatorRange"].getRegion()
+
+    _lower = _limits[0]
+    _upper = _limits[1]
+
+    if horus_modem != None:
+        horus_modem.set_estimator_limits(_lower, _upper)
+
+widgets["estimatorRange"].sigRegionChangeFinished.connect(update_manual_estimator)
+
+
+def set_manual_estimator():
+    """ Show or hide the manual estimator limit region """
+    global widgets
+    if widgets["horusManualEstimatorSelector"].isChecked():
+        widgets["spectrumPlot"].addItem(widgets["estimatorRange"])
+        update_manual_estimator()
+    else:
+        try:
+            widgets["spectrumPlot"].removeItem(widgets["estimatorRange"])
+            # Reset modem estimator limits to their defaults.
+            if horus_modem != None:
+                horus_modem.set_estimator_limits(DEFAULT_ESTIMATOR_MIN, DEFAULT_ESTIMATOR_MAX)
+        except:
+            pass
+
+widgets["horusManualEstimatorSelector"].clicked.connect(set_manual_estimator)
+
+
+def save_settings():
+    """ Manually save current settings """
+    global widgets
+    save_config(widgets)
+
+widgets["saveSettingsButton"].clicked.connect(save_settings)
+
+
+# Handlers for data arriving via queues.
 
 def handle_fft_update(data):
     """ Handle a new FFT update """
@@ -656,6 +713,12 @@ def start_decoding():
             sample_rate=_sample_rate
         )
 
+        # Set manual estimator limits, if enabled
+        if widgets["horusManualEstimatorSelector"].isChecked():
+            update_manual_estimator()
+        else:
+            horus_modem.set_estimator_limits(DEFAULT_ESTIMATOR_MIN, DEFAULT_ESTIMATOR_MAX)
+
         # Setup Audio (or UDP input)
         if _dev_name == 'GQRX UDP':
             audio_stream = UDPStream(
@@ -695,6 +758,8 @@ def start_decoding():
             horus_modem.close()
         except Exception as e:
             logging.exception("Could not close horus modem.", exc_info=e)
+
+        horus_modem = None
 
         fft_update_queue = Queue(256)
         status_update_queue = Queue(256)
