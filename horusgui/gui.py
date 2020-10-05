@@ -16,6 +16,7 @@ if sys.version_info < (3, 0):
 import datetime
 import glob
 import logging
+import platform
 import pyqtgraph as pg
 import numpy as np
 from queue import Queue
@@ -35,7 +36,7 @@ from .icon import getHorusIcon
 from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
-from horusdemodlib.horusudp import send_payload_summary
+from horusdemodlib.horusudp import send_payload_summary, send_ozimux_message
 from . import __version__
 
 # Setup Logging
@@ -125,6 +126,7 @@ d0.addWidget(w1_audio)
 
 w1_modem = pg.LayoutWidget()
 
+
 # Modem Parameters
 widgets["horusModemLabel"] = QtGui.QLabel("<b>Mode:</b>")
 widgets["horusModemSelector"] = QtGui.QComboBox()
@@ -134,11 +136,28 @@ widgets["horusModemRateSelector"] = QtGui.QComboBox()
 
 widgets["horusMaskEstimatorLabel"] = QtGui.QLabel("<b>Enable Mask Estim.:</b>")
 widgets["horusMaskEstimatorSelector"] = QtGui.QCheckBox()
+widgets["horusMaskEstimatorSelector"].setToolTip(
+    "Enable the mask frequency estimator, which makes uses of the \n"\
+    "tone spacing value entered below as extra input to the frequency\n"\
+    "estimator. This can help decode performance in very weak signal conditions."
+)
 
 widgets["horusMaskSpacingLabel"] = QtGui.QLabel("<b>Tone Spacing (Hz):</b>")
 widgets["horusMaskSpacingEntry"] = QtGui.QLineEdit("270")
+widgets["horusMaskSpacingEntry"].setToolTip(
+    "If the tone spacing of the transmitter is known, it can be entered here,\n"\
+    "and used with the mask estimator option above. The default tone spacing for\n"\
+    "a RS41-based transmitter is 270 Hz."
+)
 widgets["horusManualEstimatorLabel"] = QtGui.QLabel("<b>Manual Estim. Limits:</b>")
 widgets["horusManualEstimatorSelector"] = QtGui.QCheckBox()
+widgets["horusManualEstimatorSelector"].setToolTip(
+    "Enables manual selection of the frequency estimator limits. This will enable\n"\
+    "a slidable area on the spectrum display, which can be used to select the frequency\n"\
+    "range of interest, and help stop in-band CW interference from biasing the frequency\n"\
+    "estimator. You can either click-and-drag the entire area, or click-and-drag the edges\n"\
+    "to change the estimator frequency range."
+)
 
 # Start/Stop
 widgets["startDecodeButton"] = QtGui.QPushButton("Start")
@@ -168,14 +187,30 @@ widgets["habitatUploadSelector"].setChecked(True)
 widgets["userCallLabel"] = QtGui.QLabel("<b>Callsign:</b>")
 widgets["userCallEntry"] = QtGui.QLineEdit("N0CALL")
 widgets["userCallEntry"].setMaxLength(20)
+widgets["userCallEntry"].setToolTip(
+    "Your station callsign, which doesn't necessarily need to be an\n"\
+    "amateur radio callsign."
+)
 widgets["userLocationLabel"] = QtGui.QLabel("<b>Lat/Lon:</b>")
 widgets["userLatEntry"] = QtGui.QLineEdit("0.0")
+widgets["userLatEntry"].setToolTip("Station Latitude in Decimal Degrees, e.g. -34.123456")
 widgets["userLonEntry"] = QtGui.QLineEdit("0.0")
+widgets["userLonEntry"].setToolTip("Station Longitude in Decimal Degrees, e.g. 138.123456")
 widgets["userAntennaLabel"] = QtGui.QLabel("<b>Antenna:</b>")
 widgets["userAntennaEntry"] = QtGui.QLineEdit("")
+widgets["userAntennaEntry"].setToolTip("A text description of your station's antenna.")
 widgets["userRadioLabel"] = QtGui.QLabel("<b>Radio:</b>")
 widgets["userRadioEntry"] = QtGui.QLineEdit("Horus-GUI " + __version__)
+widgets["userRadioEntry"].setToolTip(
+    "A text description of your station's radio setup.\n"\
+    "This field will be automatically prefixed with Horus-GUI."
+)
 widgets["habitatUploadPosition"] = QtGui.QPushButton("Upload Position")
+widgets["habitatUploadPosition"].setToolTip(
+    "Manually re-upload your position information to HabHub.\n"\
+    "Note that it can take a few minutes for your new information to\n"\
+    "appear on the map."
+)
 widgets["saveSettingsButton"] = QtGui.QPushButton("Save Settings")
 
 w1_habitat.addWidget(widgets["habitatUploadLabel"], 0, 0, 1, 1)
@@ -199,14 +234,38 @@ w1_other = pg.LayoutWidget()
 widgets["horusUploadLabel"] = QtGui.QLabel("<b>Enable Horus UDP Output:</b>")
 widgets["horusUploadSelector"] = QtGui.QCheckBox()
 widgets["horusUploadSelector"].setChecked(True)
+widgets["horusUploadSelector"].setToolTip(
+    "Enable output of 'Horus UDP' JSON messages. These are emitted as a JSON object\n"\
+    "and contain the fields: callsign, time, latitude, longitude, altitude, snr"\
+)
 widgets["horusUDPLabel"] = QtGui.QLabel("<b>Horus UDP Port:</b>")
 widgets["horusUDPEntry"] = QtGui.QLineEdit("55672")
 widgets["horusUDPEntry"].setMaxLength(5)
+widgets["horusUDPEntry"].setToolTip(
+    "UDP Port to output 'Horus UDP' JSON messages to."
+)
+widgets["ozimuxUploadLabel"] = QtGui.QLabel("<b>Enable OziMux UDP Output:</b>")
+widgets["ozimuxUploadSelector"] = QtGui.QCheckBox()
+widgets["ozimuxUploadSelector"].setChecked(False)
+widgets["ozimuxUploadSelector"].setToolTip(
+    "Output OziMux UDP messages. These are of the form:\n"\
+    "'TELEMETRY,HH:MM:SS,lat,lon,alt\\n'"
+)
+widgets["ozimuxUDPLabel"] = QtGui.QLabel("<b>Ozimux UDP Port:</b>")
+widgets["ozimuxUDPEntry"] = QtGui.QLineEdit("55683")
+widgets["ozimuxUDPEntry"].setMaxLength(5)
+widgets["ozimuxUDPEntry"].setToolTip(
+    "UDP Port to output 'OziMux' UDP messages to."
+)
 
 w1_other.addWidget(widgets["horusUploadLabel"], 0, 0, 1, 1)
 w1_other.addWidget(widgets["horusUploadSelector"], 0, 1, 1, 1)
 w1_other.addWidget(widgets["horusUDPLabel"], 1, 0, 1, 1)
 w1_other.addWidget(widgets["horusUDPEntry"], 1, 1, 1, 1)
+w1_other.addWidget(widgets["ozimuxUploadLabel"], 2, 0, 1, 1)
+w1_other.addWidget(widgets["ozimuxUploadSelector"], 2, 1, 1, 1)
+w1_other.addWidget(widgets["ozimuxUDPLabel"], 3, 0, 1, 1)
+w1_other.addWidget(widgets["ozimuxUDPEntry"], 3, 1, 1, 1)
 w1_other.layout.setRowStretch(5, 1)
 
 d0_other.addWidget(w1_other)
@@ -308,13 +367,9 @@ w4_data = pg.LayoutWidget()
 widgets["latestRawSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Raw):</b>")
 widgets["latestRawSentenceData"] = QtGui.QLineEdit("NO DATA")
 widgets["latestRawSentenceData"].setReadOnly(True)
-#widgets["latestRawSentenceData"].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
-#widgets["latestRawSentenceData"].setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
 widgets["latestDecodedSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Decoded):</b>")
 widgets["latestDecodedSentenceData"] = QtGui.QLineEdit("NO DATA")
 widgets["latestDecodedSentenceData"].setReadOnly(True)
-#widgets["latestDecodedSentenceData"].setFont(QtGui.QFont("Courier New", 18, QtGui.QFont.Bold))
-#widgets["latestDecodedSentenceData"].setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
 w4_data.addWidget(widgets["latestRawSentenceLabel"], 0, 0, 1, 1)
 w4_data.addWidget(widgets["latestRawSentenceData"], 0, 1, 1, 6)
 w4_data.addWidget(widgets["latestDecodedSentenceLabel"], 1, 0, 1, 1)
@@ -322,7 +377,12 @@ w4_data.addWidget(widgets["latestDecodedSentenceData"], 1, 1, 1, 6)
 d3_data.addWidget(w4_data)
 
 w4_position = pg.LayoutWidget()
-POSITION_LABEL_FONT_SIZE = 16
+# This font seems to look bigger in Windows... not sure why.
+if 'Windows' in platform.system():
+    POSITION_LABEL_FONT_SIZE = 14
+else:
+    POSITION_LABEL_FONT_SIZE = 16
+
 widgets["latestPacketCallsignLabel"] = QtGui.QLabel("<b>Callsign</b>")
 widgets["latestPacketCallsignValue"] = QtGui.QLabel("---")
 widgets["latestPacketCallsignValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
@@ -641,6 +701,11 @@ def handle_new_packet(frame):
                 _decoded['snr'] = _snr
 
                 send_payload_summary(_decoded, port=_udp_port)
+            
+            # Send data out via OziMux messaging
+            if widgets["ozimuxUploadSelector"].isChecked():
+                _udp_port = int(widgets["ozimuxUDPEntry"].text())
+                send_ozimux_message(_decoded, port=_udp_port)
 
 
 
@@ -743,6 +808,14 @@ def start_decoding():
         running = True
         logging.info("Started Audio Processing.")
 
+        # Grey out some selectors, so the user cannot adjust them while we are decoding.
+        widgets["audioDeviceSelector"].setEnabled(False)
+        widgets["audioSampleRateSelector"].setEnabled(False)
+        widgets["horusModemSelector"].setEnabled(False)
+        widgets["horusModemRateSelector"].setEnabled(False)
+        widgets["horusMaskEstimatorSelector"].setEnabled(False) # This should really be editable while running.
+        widgets["horusMaskSpacingEntry"].setEnabled(False) # This should really be editable while running
+
     else:
         try:
             audio_stream.stop()
@@ -768,6 +841,14 @@ def start_decoding():
         running = False
 
         logging.info("Stopped Audio Processing.")
+        
+        # Re-Activate selectors.
+        widgets["audioDeviceSelector"].setEnabled(True)
+        widgets["audioSampleRateSelector"].setEnabled(True)
+        widgets["horusModemSelector"].setEnabled(True)
+        widgets["horusModemRateSelector"].setEnabled(True)
+        widgets["horusMaskEstimatorSelector"].setEnabled(True)
+        widgets["horusMaskSpacingEntry"].setEnabled(True)
 
 
 widgets["startDecodeButton"].clicked.connect(start_decoding)

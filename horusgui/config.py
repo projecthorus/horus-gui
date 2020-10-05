@@ -29,6 +29,8 @@ default_config = {
     "habitat_radio": "",
     "horus_udp_enabled": True,
     "horus_udp_port": 55672,
+    "ozimux_enabled": False,
+    "ozimux_udp_port": 55683,
     "payload_list": json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST),
     "custom_field_list": json.dumps({})
 }
@@ -87,6 +89,8 @@ def read_config(widgets):
         # Horus Settings
         widgets["horusUploadSelector"].setChecked(ValueToBool(default_config["horus_udp_enabled"]))
         widgets["horusUDPEntry"].setText(str(default_config["horus_udp_port"]))
+        widgets["ozimuxUploadSelector"].setChecked(ValueToBool(default_config["ozimux_enabled"]))
+        widgets["ozimuxUDPEntry"].setText(str(default_config["ozimux_udp_port"]))
 
         # Try and set the audio device.
         # If the audio device is not in the available list of devices, this will fail silently.
@@ -133,6 +137,8 @@ def save_config(widgets):
         default_config["habitat_radio"] = widgets["userRadioEntry"].text()
         default_config["horus_udp_enabled"] = widgets["horusUploadSelector"].isChecked()
         default_config["horus_udp_port"] = int(widgets["horusUDPEntry"].text())
+        default_config["ozimux_enabled"] = widgets["ozimuxUploadSelector"].isChecked()
+        default_config["ozimux_udp_port"] = int(widgets["ozimuxUDPEntry"].text())
         default_config["audio_device"] = widgets["audioDeviceSelector"].currentText()
         default_config["audio_sample_rate"] = widgets["audioSampleRateSelector"].currentText()
         default_config["modem"] = widgets["horusModemSelector"].currentText()
@@ -150,7 +156,7 @@ def init_payloads():
     global default_config
 
     # Attempt to grab the payload list.
-    _payload_list = download_latest_payload_id_list()
+    _payload_list = download_latest_payload_id_list(timeout=3)
     if _payload_list:
         # Sanity check the result
         if 0 in _payload_list:
@@ -175,7 +181,7 @@ def init_payloads():
 
     logging.info(f"Payload List contains {len(list(horusdemodlib.payloads.HORUS_PAYLOAD_LIST.keys()))} entries.")
 
-    _custom_fields = download_latest_custom_field_list()
+    _custom_fields = download_latest_custom_field_list(timeout=3)
     if _custom_fields:
         # Sanity Check
         if 'HORUSTEST' in _custom_fields:
