@@ -117,11 +117,16 @@ widgets["audioDeviceSelector"] = QtGui.QComboBox()
 widgets["audioSampleRateLabel"] = QtGui.QLabel("<b>Sample Rate (Hz):</b>")
 widgets["audioSampleRateSelector"] = QtGui.QComboBox()
 
+widgets["audioDbfsLabel"] = QtGui.QLabel("<b>Input Level (dBFS):</b>")
+widgets["audioDbfsValue"] = QtGui.QLabel("--")
+widgets["audioDbfsValue_float"] = 0.0
+
 w1_audio.addWidget(widgets["audioDeviceLabel"], 0, 0, 1, 1)
 w1_audio.addWidget(widgets["audioDeviceSelector"], 0, 1, 1, 2)
 w1_audio.addWidget(widgets["audioSampleRateLabel"], 1, 0, 1, 1)
 w1_audio.addWidget(widgets["audioSampleRateSelector"], 1, 1, 1, 2)
-
+w1_audio.addWidget(widgets["audioDbfsLabel"], 2, 0, 1, 1)
+w1_audio.addWidget(widgets["audioDbfsValue"], 2, 1, 1, 2)
 d0.addWidget(w1_audio)
 
 w1_modem = pg.LayoutWidget()
@@ -231,6 +236,7 @@ w1_habitat.addWidget(widgets["saveSettingsButton"], 7, 0, 1, 3)
 d0_habitat.addWidget(w1_habitat)
 
 w1_other = pg.LayoutWidget()
+widgets["horusHeaderLabel"] = QtGui.QLabel("<b><u>Telemetry Forwarding</u></b>")
 widgets["horusUploadLabel"] = QtGui.QLabel("<b>Enable Horus UDP Output:</b>")
 widgets["horusUploadSelector"] = QtGui.QCheckBox()
 widgets["horusUploadSelector"].setChecked(True)
@@ -257,16 +263,27 @@ widgets["ozimuxUDPEntry"].setMaxLength(5)
 widgets["ozimuxUDPEntry"].setToolTip(
     "UDP Port to output 'OziMux' UDP messages to."
 )
+widgets["otherHeaderLabel"] = QtGui.QLabel("<b><u>Other Settings</u></b>")
+widgets["inhibitCRCLabel"] = QtGui.QLabel("<b>Hide Failed CRC Errors:</b>")
+widgets["inhibitCRCSelector"] = QtGui.QCheckBox()
+widgets["inhibitCRCSelector"].setChecked(True)
+widgets["inhibitCRCSelector"].setToolTip(
+    "Hide CRC Failed error messages."
+)
 
-w1_other.addWidget(widgets["horusUploadLabel"], 0, 0, 1, 1)
-w1_other.addWidget(widgets["horusUploadSelector"], 0, 1, 1, 1)
-w1_other.addWidget(widgets["horusUDPLabel"], 1, 0, 1, 1)
-w1_other.addWidget(widgets["horusUDPEntry"], 1, 1, 1, 1)
-w1_other.addWidget(widgets["ozimuxUploadLabel"], 2, 0, 1, 1)
-w1_other.addWidget(widgets["ozimuxUploadSelector"], 2, 1, 1, 1)
-w1_other.addWidget(widgets["ozimuxUDPLabel"], 3, 0, 1, 1)
-w1_other.addWidget(widgets["ozimuxUDPEntry"], 3, 1, 1, 1)
-w1_other.layout.setRowStretch(5, 1)
+w1_other.addWidget(widgets["horusHeaderLabel"], 0, 0, 1, 2)
+w1_other.addWidget(widgets["horusUploadLabel"], 1, 0, 1, 1)
+w1_other.addWidget(widgets["horusUploadSelector"], 1, 1, 1, 1)
+w1_other.addWidget(widgets["horusUDPLabel"], 2, 0, 1, 1)
+w1_other.addWidget(widgets["horusUDPEntry"], 2, 1, 1, 1)
+w1_other.addWidget(widgets["ozimuxUploadLabel"], 3, 0, 1, 1)
+w1_other.addWidget(widgets["ozimuxUploadSelector"], 3, 1, 1, 1)
+w1_other.addWidget(widgets["ozimuxUDPLabel"], 4, 0, 1, 1)
+w1_other.addWidget(widgets["ozimuxUDPEntry"], 4, 1, 1, 1)
+w1_other.addWidget(widgets["otherHeaderLabel"], 5, 0, 1, 2)
+w1_other.addWidget(widgets["inhibitCRCLabel"], 6, 0, 1, 1)
+w1_other.addWidget(widgets["inhibitCRCSelector"], 6, 1, 1, 1)
+w1_other.layout.setRowStretch(7, 1)
 
 d0_other.addWidget(w1_other)
 
@@ -356,11 +373,11 @@ widgets["snrPlotData"] = widgets["snrPlot"].plot(widgets["snrPlotTime"], widgets
 # widgets["eyeDiagramPlot"] = pg.PlotWidget(title="Eye Diagram")
 # widgets["eyeDiagramData"] = widgets["eyeDiagramPlot"].plot([0])
 
-w3_snr.addWidget(widgets["snrPlot"], 0, 1, 2, 1)
+#w3_snr.addWidget(widgets["snrPlot"], 0, 1, 2, 1)
 
 #w3.addWidget(widgets["eyeDiagramPlot"], 0, 1)
 
-d2_snr.addWidget(w3_snr)
+d2_snr.addWidget(widgets["snrPlot"])
 
 # Telemetry Data
 w4_data = pg.LayoutWidget()
@@ -551,6 +568,7 @@ def handle_fft_update(data):
 
     _scale = data["scale"]
     _data = data["fft"]
+    _dbfs = data["dbfs"]
 
     widgets["spectrumPlotData"].setData(_scale, _data)
 
@@ -559,12 +577,26 @@ def handle_fft_update(data):
     _tc = 0.1
     _new_max = float((_old_max * (1 - _tc)) + (np.max(_data) * _tc))
 
+    # Use same IIR to smooth out dBFS readings a little.
+    _new_dbfs = float((widgets["audioDbfsValue_float"] * (1 - _tc)) + (_dbfs * _tc))
+
     # Store new max
     widgets["spectrumPlotRange"][1] = max(widgets["spectrumPlotRange"][0], _new_max)
 
     widgets["spectrumPlot"].setYRange(
         widgets["spectrumPlotRange"][0], widgets["spectrumPlotRange"][1] + 20
     )
+
+    # Set dBFS value
+    if (_new_dbfs>-5.0):
+        _dbfs_ok = "TOO HIGH"
+    elif (_new_dbfs < -50.0):
+        _dbfs_ok = "LOW"
+    else:
+        _dbfs_ok = "GOOD"
+
+    widgets["audioDbfsValue"].setText(f"{_new_dbfs:.0f}\t{_dbfs_ok}")
+    widgets["audioDbfsValue_float"] = _new_dbfs
 
 def handle_status_update(status):
     """ Handle a new status frame """
@@ -635,8 +667,6 @@ def handle_new_packet(frame):
             # RTTY packets are provided as a string, and can be displayed directly
             _packet = frame.data
         
-        # Update the raw display.
-        widgets["latestRawSentenceData"].setText(f"{_packet}")
 
 
         _decoded = None
@@ -647,6 +677,7 @@ def handle_new_packet(frame):
             try:
                 _decoded = parse_ukhas_string(frame.data)
                 # If we get here, the string is valid!
+                widgets["latestRawSentenceData"].setText(f"{_packet}")
                 widgets["latestDecodedSentenceData"].setText(f"{_packet}")
 
                 # Upload the string to Habitat
@@ -654,18 +685,27 @@ def handle_new_packet(frame):
                 habitat_uploader.add(_decoded_str)
 
             except Exception as e:
-                widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
-                logging.error(f"Decode Failed: {str(e)}")
+                if "CRC Failure" in str(e) and widgets["inhibitCRCSelector"].isChecked():
+                    pass
+                else:
+                    widgets["latestRawSentenceData"].setText(f"{_packet}")
+                    widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
+                    logging.error(f"Decode Failed: {str(e)}")
         
         else:
             # Handle binary packets
             try:
                 _decoded = decode_packet(frame.data)
+                widgets["latestRawSentenceData"].setText(f"{_packet}")
                 widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
                 habitat_uploader.add(_decoded['ukhas_str']+'\n')
             except Exception as e:
-                widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
-                logging.error(f"Decode Failed: {str(e)}")
+                if "CRC Failure" in str(e) and widgets["inhibitCRCSelector"].isChecked():
+                    pass
+                else:
+                    widgets["latestRawSentenceData"].setText(f"{_packet}")
+                    widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
+                    logging.error(f"Decode Failed: {str(e)}")
         
         # If we have extracted data, update the decoded data display
         if _decoded:

@@ -10,7 +10,7 @@ HORUS_MODEM_LIST = {
         "baud_rates": [50, 100, 300], # Note: 25 Baud removed until issues in underlying modem are fixed.
         "default_baud_rate": 100,
         "default_tone_spacing": 270,
-        "use_mask_estimator": False,
+        "use_mask_estimator": True,
     },
     "RTTY (7N1)": {
         "id": Mode.RTTY_7N1,

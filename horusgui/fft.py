@@ -63,9 +63,12 @@ class FFTProcess(object):
             np.abs(np.fft.fftshift(np.fft.fft(raw_data * self.window)))
         ) - 20 * np.log10(self.nfft)
 
+        # Calculate Maximum value
+        _dbfs = 20*np.log10(raw_data.max())
+
         if self.callback != None:
             if self.update_counter % self.update_decimation == 0:
-                self.callback({"fft": _fft[self.mask], "scale": self.fft_scale[self.mask]})
+                self.callback({"fft": _fft[self.mask], "scale": self.fft_scale[self.mask], 'dbfs': _dbfs})
                 
             self.update_counter += 1
 
