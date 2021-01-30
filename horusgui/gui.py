@@ -387,10 +387,15 @@ widgets["latestRawSentenceData"].setReadOnly(True)
 widgets["latestDecodedSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Decoded):</b>")
 widgets["latestDecodedSentenceData"] = QtGui.QLineEdit("NO DATA")
 widgets["latestDecodedSentenceData"].setReadOnly(True)
+widgets["latestSentenceTimeLabel"] = QtGui.QLabel("<b>Time since last packet:</b>")
+widgets["latestSentenceTimeData"] = QtGui.QLineEdit("NO DATA")
+widgets["latestSentenceTimeData"].setReadOnly(True)
 w4_data.addWidget(widgets["latestRawSentenceLabel"], 0, 0, 1, 1)
 w4_data.addWidget(widgets["latestRawSentenceData"], 0, 1, 1, 6)
 w4_data.addWidget(widgets["latestDecodedSentenceLabel"], 1, 0, 1, 1)
 w4_data.addWidget(widgets["latestDecodedSentenceData"], 1, 1, 1, 6)
+w4_data.addWidget(widgets["latestSentenceTimeLabel"], 2, 0, 1, 1)
+w4_data.addWidget(widgets["latestSentenceTimeData"], 2, 1, 1, 6)
 d3_data.addWidget(w4_data)
 
 w4_position = pg.LayoutWidget()
@@ -651,9 +656,13 @@ def add_stats_update(frame):
         status_update_queue.put_nowait(frame)
     except:
         logging.error("Status Update Queue Full!")
-    
 
-
+def show_last_packet_time():
+    global last_packet
+    # Use seconds not milliseconds as we only want h:m:s in the output string
+    seconds = last_packet.elapsed() // 1000
+    time = str(datetime.timedelta(seconds=seconds))
+    widgets["latestSentenceTimeData"].setText(time)
 
 def handle_new_packet(frame):
     """ Handle receipt of a newly decoded packet """
@@ -706,9 +715,10 @@ def handle_new_packet(frame):
                     widgets["latestRawSentenceData"].setText(f"{_packet}")
                     widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
                     logging.error(f"Decode Failed: {str(e)}")
-        
+
         # If we have extracted data, update the decoded data display
         if _decoded:
+            last_packet.restart()
             widgets["latestPacketCallsignValue"].setText(_decoded['callsign'])
             widgets["latestPacketTimeValue"].setText(_decoded['time'])
             widgets["latestPacketLatitudeValue"].setText(f"{_decoded['latitude']:.5f}")
@@ -847,6 +857,7 @@ def start_decoding():
         widgets["startDecodeButton"].setText("Stop")
         running = True
         logging.info("Started Audio Processing.")
+        last_packet.start()
 
         # Grey out some selectors, so the user cannot adjust them while we are decoding.
         widgets["audioDeviceSelector"].setEnabled(False)
@@ -923,6 +934,9 @@ def processQueues():
         
         handle_log_update(_log)
 
+    if running:
+        show_last_packet_time()
+
     # Try and force a re-draw.
     QtGui.QApplication.processEvents()
 
@@ -937,6 +951,8 @@ gui_update_timer = QtCore.QTimer()
 gui_update_timer.timeout.connect(processQueues)
 gui_update_timer.start(100)
 
+# start timer to count
+last_packet = QtCore.QTime()
 
 class ConsoleHandler(logging.Handler):
     """ Logging handler to write to the GUI console """
