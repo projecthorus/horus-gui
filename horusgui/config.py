@@ -69,8 +69,10 @@ def read_config(widgets):
     """ Read in configuration settings from Qt """
     global qt_settings, default_config
 
+    OK_VERSIONS = [__version__, "0.1.15", "0.1.14"]
+    
     # Try and read in the version parameter from QSettings
-    if qt_settings.value("version") != __version__:
+    if qt_settings.value("version") not in OK_VERSIONS:
         logging.debug("Configuration out of date, clearing and overwriting.")
         write_config()
 
