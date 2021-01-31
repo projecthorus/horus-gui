@@ -737,7 +737,11 @@ def handle_new_packet(frame):
             if widgets["horusUploadSelector"].isChecked():
                 _udp_port = int(widgets["horusUDPEntry"].text())
                 # Add in SNR data
-                _snr = float(widgets["snrLabel"].text())
+                try:
+                    _snr = float(widgets["snrLabel"].text())
+                except ValueError as e:
+                    logging.error(e)
+                    _snr = 0
                 _decoded['snr'] = _snr
 
                 send_payload_summary(_decoded, port=_udp_port)
