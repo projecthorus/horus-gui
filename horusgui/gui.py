@@ -577,15 +577,19 @@ def handle_fft_update(data):
     _tc = 0.1
     _new_max = float((_old_max * (1 - _tc)) + (np.max(_data) * _tc))
 
-    # Use same IIR to smooth out dBFS readings a little.
-    _new_dbfs = float((widgets["audioDbfsValue_float"] * (1 - _tc)) + (_dbfs * _tc))
-
     # Store new max
     widgets["spectrumPlotRange"][1] = max(widgets["spectrumPlotRange"][0], _new_max)
 
     widgets["spectrumPlot"].setYRange(
         widgets["spectrumPlotRange"][0], widgets["spectrumPlotRange"][1] + 20
     )
+
+    # Ignore NaN values.
+    if np.isnan(_dbfs):
+        return
+
+    # Use same IIR to smooth out dBFS readings a little.
+    _new_dbfs = float((widgets["audioDbfsValue_float"] * (1 - _tc)) + (_dbfs * _tc))
 
     # Set dBFS value
     if (_new_dbfs>-5.0):
