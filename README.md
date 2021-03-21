@@ -43,9 +43,9 @@ Written by:
 ## Usage
 
 ### Binary Builds
-Until we sort out automated release builds, some very early binary builds for Windows and OSX are available here: https://rfhead.net/horus/horusgui/
+Until we sort out automated release builds, binary released of horus-gui are available here: https://rfhead.net/horus/horusgui/
 
-Please let me know if you have success using these! 
+Please let me know if you have issues!
 
 ### Build HorusDemodLib
 
