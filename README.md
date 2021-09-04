@@ -3,10 +3,10 @@
 Telemetry demodulator for the following modems in use by Project Horus
 * Horus Binary Modes (4FSK)
   * v1 - Legacy 22 byte mode, Golay(23,12) FEC
-  * v2 - 16/32-byte modes, LDPC FEC (Under development)
+  * v2 - 32-byte mode, Golay(23,12) FEC
 * RTTY (7N1, 7N2 and 8N2, standard [UKHAS sentences](https://ukhas.org.uk/communication:protocol) with CRC16 only)
 
-This project serves as a graphical front-end to [horusdemodlib](https://github.com/projecthorus/horusdemodlib) a Python/C library of telemetry demodulators based off the [codec2](https://github.com/drowe67/codec2) FSK modem. The core modem used in this library is very well tested, and performs in line with incoherent FSK demodulator theory. The RTTY decoder is approximately [2dB better](http://www.rowetel.com/?p=5906) than dl-fldigi, and the Horus Binary v1 modem approximately 7 dB better again. Once finished, the Horus Binary v2 modes should provide more flexibility over the v1 mode, and provide further performance improvements.
+This project serves as a graphical front-end to [horusdemodlib](https://github.com/projecthorus/horusdemodlib) a Python/C library of telemetry demodulators based off the [codec2](https://github.com/drowe67/codec2) FSK modem. The core modem used in this library is very well tested, and performs in line with incoherent FSK demodulator theory. The RTTY decoder is approximately [2dB better](http://www.rowetel.com/?p=5906) than dl-fldigi, and the Horus Binary modem approximately 7 dB better again. The Horus Binary v2 mode provides some additional flexibility over the v1 mode, allowing the addition of custom telemetry fields.
 
 ### Important Performance Notes
 The FSK demodulator at the core of this application expects the transmitter to behave like a modem. That is, it should:
@@ -25,7 +25,6 @@ Written by:
 * Python Library - Mark Jessop <vk5qi@rfhead.net>
 * FSK Modem - [David Rowe](http://rowetel.com)
 * FSK Modem Python Wrapper - [XSSFox](https://twitter.com/xssfox)
-* LDPC Codes - [Bill Cowley](http://lowsnr.org/)
 
 ![Screenshot](doc/horusgui_screenshot.png)
 

@@ -12,7 +12,7 @@ from ruamel.yaml import YAML
 from . import __version__
 from .modem import populate_modem_settings
 from .audio import populate_sample_rates
-from horusdemodlib.payloads import download_latest_payload_id_list, download_latest_custom_field_list
+from horusdemodlib.payloads import download_latest_payload_id_list, download_latest_custom_field_list, read_payload_list, read_custom_field_list
 import horusdemodlib.payloads
 
 default_config = {
@@ -69,7 +69,7 @@ def read_config(widgets):
     """ Read in configuration settings from Qt """
     global qt_settings, default_config
 
-    OK_VERSIONS = [__version__, "0.1.15", "0.1.14"]
+    OK_VERSIONS = [__version__]
     
     # Try and read in the version parameter from QSettings
     if qt_settings.value("version") not in OK_VERSIONS:
@@ -153,19 +153,24 @@ def save_config(widgets):
         write_config()
 
 
-def init_payloads():
+def init_payloads(payload_id_list=None, custom_field_list=None):
     """ Attempt to download the latest payload / config data, and update local configs """
     global default_config
 
     # Attempt to grab the payload list.
-    _payload_list = download_latest_payload_id_list(timeout=3)
+    if payload_id_list is None:
+        _payload_list = download_latest_payload_id_list(timeout=3)
+    else:
+        logging.info(f"Using supplied Payload ID list file: {payload_id_list}")
+        _payload_list = read_payload_list(payload_id_list)
+
     if _payload_list:
         # Sanity check the result
         if 0 in _payload_list:
             horusdemodlib.payloads.HORUS_PAYLOAD_LIST = _payload_list
             logging.info(f"Updated Payload List Successfuly!")
         else:
-            logging.critical("Could not read downloaded payload list!")
+            logging.critical("Could not read payload list!")
     else:
         if 'payload_list' in default_config:
             # Maybe we have a stored config we can use.
@@ -183,20 +188,25 @@ def init_payloads():
 
     logging.info(f"Payload List contains {len(list(horusdemodlib.payloads.HORUS_PAYLOAD_LIST.keys()))} entries.")
 
-    _custom_fields = download_latest_custom_field_list(timeout=3)
+    if custom_field_list is None:
+        _custom_fields = download_latest_custom_field_list(timeout=3)
+    else:
+        logging.info(f"Using supplied Custom Field List file: {custom_field_list}")
+        _custom_fields = read_custom_field_list(custom_field_list)
+
     if _custom_fields:
         # Sanity Check
-        if 'HORUSTEST' in _custom_fields:
+        if '4FSKTEST-V2' in _custom_fields:
             horusdemodlib.payloads.HORUS_CUSTOM_FIELDS = _custom_fields
             logging.info(f"Updated Custom Field List Successfuly!")
         else:
-            logging.critical("Could not read downloaded custom field list!")
+            logging.critical("Could not read custom field list!")
     else:
         if 'custom_field_list' in default_config:
             # Maybe we have a stored config we can use.
             try:
                 _custom_fields = json.loads(default_config['custom_field_list'])
-                if 'HORUSTEST' in _custom_fields:
+                if '4FSKTEST-V2' in _custom_fields:
                     horusdemodlib.payloads.HORUS_CUSTOM_FIELDS = _custom_fields
                     logging.warning("Loaded Custom Fields List from local cache, may be out of date!")
                 else:

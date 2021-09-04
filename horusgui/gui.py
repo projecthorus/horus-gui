@@ -13,6 +13,7 @@ if sys.version_info < (3, 0):
     print("This script requires Python 3!")
     sys.exit(1)
 
+import argparse
 import datetime
 import glob
 import logging
@@ -39,8 +40,6 @@ from horusdemodlib.payloads import *
 from horusdemodlib.horusudp import send_payload_summary, send_ozimux_message
 from . import __version__
 
-# Setup Logging
-logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
 # A few hardcoded defaults
 DEFAULT_ESTIMATOR_MIN = 100
@@ -68,6 +67,23 @@ decoder_init = False
 
 # Global running indicator
 running = False
+
+# Read command-line arguments
+parser = argparse.ArgumentParser(description="Project Horus GUI", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("--payload-id-list", type=str, default=None, help="Use supplied Payload ID List instead of downloading a new one.")
+parser.add_argument("--custom-field-list", type=str, default=None, help="Use supplied Custom Field List instead of downloading a new one.")
+parser.add_argument("-v", "--verbose", action="store_true", default=False, help="Verbose output (set logging level to DEBUG)")
+args = parser.parse_args()
+
+if args.verbose:
+    _log_level = logging.DEBUG
+else:
+    _log_level = logging.INFO
+
+# Setup Logging
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s: %(message)s", level=_log_level
+)
 
 #
 #   GUI Creation - The Bad way.
@@ -914,7 +930,7 @@ def handle_log_update(log_update):
 # GUI Update Loop
 def processQueues():
     """ Read in data from the queues, this decouples the GUI and async inputs somewhat. """
-    global fft_update_queue, status_update_queue, decoder_init, widgets
+    global fft_update_queue, status_update_queue, decoder_init, widgets, args
 
     while fft_update_queue.qsize() > 0:
         _data = fft_update_queue.get()
@@ -936,7 +952,7 @@ def processQueues():
 
     if not decoder_init:
         # Initialise decoders, and other libraries here.
-        init_payloads()
+        init_payloads(payload_id_list = args.payload_id_list, custom_field_list = args.custom_field_list)
         decoder_init = True
         # Once initialised, enable the start button
         widgets["startDecodeButton"].setEnabled(True)
