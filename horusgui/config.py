@@ -69,7 +69,7 @@ def read_config(widgets):
     """ Read in configuration settings from Qt """
     global qt_settings, default_config
 
-    OK_VERSIONS = [__version__]
+    OK_VERSIONS = [__version__, '0.2.1']
     
     # Try and read in the version parameter from QSettings
     if qt_settings.value("version") not in OK_VERSIONS:
