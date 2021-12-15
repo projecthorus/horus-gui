@@ -31,6 +31,7 @@ Written by:
 ### Known Issues
 * Occasional crash when processing is stopped just as a packet is being processed by horus_api.
 * Queue events not processed on OSX when the application is running in the background.
+* Python 3.10 not supported due to issue with PyAudio dependency.
 
 ### TODO LIST
 * Important Things
@@ -63,6 +64,8 @@ $ cd horus-gui
 ```
 
 ### (Optional) Create a Virtual Environment
+
+**Warning - Python 3.10 will not work until a known compatability issue with pyaudio has been fixed. Use Python 3.9.**
 
 Create a virtual environment and install dependencies.
 ```console
