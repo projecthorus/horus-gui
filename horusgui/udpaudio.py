@@ -36,7 +36,7 @@ class UDPStream(object):
         except:
             pass
     
-        self.s.bind(('',self.udp_port))
+        self.s.bind(('127.0.0.1',self.udp_port))
         while self.listen_thread_running:
             try:
                 m = self.s.recvfrom(65535)

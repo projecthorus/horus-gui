@@ -21,7 +21,7 @@ def init_audio(widgets):
     # Clear list
     widgets["audioDeviceSelector"].clear()
     # Add in the 'dummy' GQRX UDP interface
-    widgets["audioDeviceSelector"].addItem('GQRX UDP')
+    widgets["audioDeviceSelector"].addItem('UDP Audio (127.0.0.1:7355)')
 
     # Iterate through PyAudio devices
     for x in range(0, pyAudio.get_device_count()):
@@ -57,8 +57,8 @@ def populate_sample_rates(widgets):
     _dev_name = widgets["audioDeviceSelector"].currentText()
 
     
-    if _dev_name == 'GQRX UDP':
-        # Add in fixed sample rate for GQRX input, which only outputs at 48 kHz.
+    if _dev_name == 'UDP Audio (127.0.0.1:7355)':
+        # Add in fixed sample rate for GQRX/SDR++ input, which only outputs at 48 kHz.
         widgets["audioSampleRateSelector"].addItem(str(48000))
         widgets["audioSampleRateSelector"].setCurrentIndex(0)
 

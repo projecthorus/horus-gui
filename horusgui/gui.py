@@ -38,6 +38,7 @@ from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
 from horusdemodlib.horusudp import send_payload_summary, send_ozimux_message
+from horusdemodlib.sondehubamateur import *
 from . import __version__
 
 
@@ -62,6 +63,7 @@ audio_stream = None
 fft_process = None
 horus_modem = None
 habitat_uploader = None
+sondehub_uploader = None
 
 decoder_init = False
 
@@ -205,6 +207,9 @@ widgets["habitatHeading"] = QtGui.QLabel("<b>Habitat Settings</b>")
 widgets["habitatUploadLabel"] = QtGui.QLabel("<b>Enable Habitat Upload:</b>")
 widgets["habitatUploadSelector"] = QtGui.QCheckBox()
 widgets["habitatUploadSelector"].setChecked(True)
+widgets["sondehubUploadLabel"] = QtGui.QLabel("<b>Enable SondeHub-Ham Upload:</b>")
+widgets["sondehubUploadSelector"] = QtGui.QCheckBox()
+widgets["sondehubUploadSelector"].setChecked(True)
 widgets["userCallLabel"] = QtGui.QLabel("<b>Callsign:</b>")
 widgets["userCallEntry"] = QtGui.QLineEdit("N0CALL")
 widgets["userCallEntry"].setMaxLength(20)
@@ -226,9 +231,9 @@ widgets["userRadioEntry"].setToolTip(
     "A text description of your station's radio setup.\n"\
     "This field will be automatically prefixed with Horus-GUI."
 )
-widgets["habitatUploadPosition"] = QtGui.QPushButton("Upload Position")
+widgets["habitatUploadPosition"] = QtGui.QPushButton("Re-upload Position")
 widgets["habitatUploadPosition"].setToolTip(
-    "Manually re-upload your position information to HabHub.\n"\
+    "Manually re-upload your position information to HabHub and SondeHub.\n"\
     "Note that it can take a few minutes for your new information to\n"\
     "appear on the map."
 )
@@ -236,18 +241,20 @@ widgets["saveSettingsButton"] = QtGui.QPushButton("Save Settings")
 
 w1_habitat.addWidget(widgets["habitatUploadLabel"], 0, 0, 1, 1)
 w1_habitat.addWidget(widgets["habitatUploadSelector"], 0, 1, 1, 1)
-w1_habitat.addWidget(widgets["userCallLabel"], 1, 0, 1, 1)
-w1_habitat.addWidget(widgets["userCallEntry"], 1, 1, 1, 2)
-w1_habitat.addWidget(widgets["userLocationLabel"], 2, 0, 1, 1)
-w1_habitat.addWidget(widgets["userLatEntry"], 2, 1, 1, 1)
-w1_habitat.addWidget(widgets["userLonEntry"], 2, 2, 1, 1)
-w1_habitat.addWidget(widgets["userAntennaLabel"], 3, 0, 1, 1)
-w1_habitat.addWidget(widgets["userAntennaEntry"], 3, 1, 1, 2)
-w1_habitat.addWidget(widgets["userRadioLabel"], 4, 0, 1, 1)
-w1_habitat.addWidget(widgets["userRadioEntry"], 4, 1, 1, 2)
-w1_habitat.addWidget(widgets["habitatUploadPosition"], 5, 0, 1, 3)
-w1_habitat.layout.setRowStretch(6, 1)
-w1_habitat.addWidget(widgets["saveSettingsButton"], 7, 0, 1, 3)
+w1_habitat.addWidget(widgets["sondehubUploadLabel"], 1, 0, 1, 1)
+w1_habitat.addWidget(widgets["sondehubUploadSelector"], 1, 1, 1, 1)
+w1_habitat.addWidget(widgets["userCallLabel"], 2, 0, 1, 1)
+w1_habitat.addWidget(widgets["userCallEntry"], 2, 1, 1, 2)
+w1_habitat.addWidget(widgets["userLocationLabel"], 3, 0, 1, 1)
+w1_habitat.addWidget(widgets["userLatEntry"], 3, 1, 1, 1)
+w1_habitat.addWidget(widgets["userLonEntry"], 3, 2, 1, 1)
+w1_habitat.addWidget(widgets["userAntennaLabel"], 4, 0, 1, 1)
+w1_habitat.addWidget(widgets["userAntennaEntry"], 4, 1, 1, 2)
+w1_habitat.addWidget(widgets["userRadioLabel"], 5, 0, 1, 1)
+w1_habitat.addWidget(widgets["userRadioEntry"], 5, 1, 1, 2)
+w1_habitat.addWidget(widgets["habitatUploadPosition"], 6, 0, 1, 3)
+w1_habitat.layout.setRowStretch(7, 1)
+w1_habitat.addWidget(widgets["saveSettingsButton"], 8, 0, 1, 3)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -509,12 +516,29 @@ habitat_uploader = HabitatUploader(
     listener_antenna=widgets["userAntennaEntry"].text(),
 )
 
+try:
+    if float(widgets["userLatEntry"].text()) == 0.0 and float(widgets["userLonEntry"].text()) == 0.0:
+        _sondehub_user_pos = None
+    else:
+        _sondehub_user_pos = [float(widgets["userLatEntry"].text()), float(widgets["userLonEntry"].text()), 0.0]
+except:
+    _sondehub_user_pos = None
+
+sondehub_uploader = SondehubAmateurUploader(
+    upload_rate = 2,
+    user_callsign = widgets["userCallEntry"].text(),
+    user_position = _sondehub_user_pos,
+    user_radio = "Horus-GUI v" + __version__ + " " + widgets["userRadioEntry"].text(),
+    user_antenna = widgets["userAntennaEntry"].text(),
+    software_name = "Horus-GUI",
+    software_version = __version__,
+)
 
 # Handlers for various checkboxes and push-buttons
 
 def habitat_position_reupload():
     """ Trigger a re-upload of user position information """
-    global widgets, habitat_uploader
+    global widgets, habitat_uploader, sondehub_uploader
 
     habitat_uploader.user_callsign = widgets["userCallEntry"].text()
     habitat_uploader.listener_lat = widgets["userLatEntry"].text()
@@ -523,16 +547,33 @@ def habitat_position_reupload():
     habitat_uploader.listener_antenna = widgets["userAntennaEntry"].text()
     habitat_uploader.trigger_position_upload()
 
+    # Do the same for Sondehub.
+    sondehub_uploader.user_callsign = widgets["userCallEntry"].text()
+    sondehub_uploader.user_radio = "Horus-GUI v" + __version__ + " " + widgets["userRadioEntry"].text()
+    sondehub_uploader.user_antenna = widgets["userAntennaEntry"].text()
+    try:
+        if float(widgets["userLatEntry"].text()) == 0.0 and float(widgets["userLonEntry"].text()) == 0.0:
+            sondehub_uploader.user_position = None
+        else:
+            sondehub_uploader.user_position = [float(widgets["userLatEntry"].text()), float(widgets["userLonEntry"].text()), 0.0]
+    except:
+        sondehub_uploader.user_position = None
+
+    sondehub_uploader.last_user_position_upload = 0
+
 widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
 
 
 def habitat_inhibit():
     """ Update the Habitat inhibit flag """
-    global widgets, habitat_uploader
+    global widgets, habitat_uploader, sondehub_uploader
     habitat_uploader.inhibit = not widgets["habitatUploadSelector"].isChecked()
+    sondehub_uploader.inhibit = not widgets["sondehubUploadSelector"].isChecked()
     logging.debug(f"Updated Habitat Inhibit state: {habitat_uploader.inhibit}")
+    logging.debug(f"Updated Sondebub Inhibit state: {sondehub_uploader.inhibit}")
 
 widgets["habitatUploadSelector"].clicked.connect(habitat_inhibit)
+widgets["sondehubUploadSelector"].clicked.connect(habitat_inhibit)
 
 
 def update_manual_estimator():
@@ -652,6 +693,17 @@ def handle_status_update(status):
     widgets["snrBar"].setValue(int(status.snr))
 
 
+def get_latest_snr():
+    global widgets
+
+    # Assume 2 Hz stats updates, and take the peak of the last 4 seconds.
+    SNR_LEN = 2*4
+    
+    if len(widgets["snrPlotSNR"])>SNR_LEN:
+        return np.max(widgets["snrPlotSNR"][-1*SNR_LEN:])
+    else:
+        return np.max(widgets["snrPlotSNR"])
+
 
 
 
@@ -691,24 +743,32 @@ def handle_new_packet(frame):
 
         _decoded = None
 
+        # Grab SNR.
+        _snr = get_latest_snr()
+        #logging.info(f"Packet SNR: {_snr:.2f}")
+
         if type(frame.data) == str:
             # RTTY packet handling.
             # Attempt to extract fields from it:
             try:
                 _decoded = parse_ukhas_string(frame.data)
+                _decoded['snr'] = _snr
                 # If we get here, the string is valid!
-                widgets["latestRawSentenceData"].setText(f"{_packet}")
+                widgets["latestRawSentenceData"].setText(f"{_packet}  ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(f"{_packet}")
 
                 # Upload the string to Habitat
                 _decoded_str = "$$" + frame.data.split('$')[-1] + '\n'
                 habitat_uploader.add(_decoded_str)
 
+                # Upload the string to Sondehub Amateur
+                sondehub_uploader.add(_decoded)
+
             except Exception as e:
                 if "CRC Failure" in str(e) and widgets["inhibitCRCSelector"].isChecked():
                     pass
                 else:
-                    widgets["latestRawSentenceData"].setText(f"{_packet}")
+                    widgets["latestRawSentenceData"].setText(f"{_packet} ({_snr:.1f} dB SNR)")
                     widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
                     logging.error(f"Decode Failed: {str(e)}")
         
@@ -716,14 +776,17 @@ def handle_new_packet(frame):
             # Handle binary packets
             try:
                 _decoded = decode_packet(frame.data)
-                widgets["latestRawSentenceData"].setText(f"{_packet}")
+                _decoded['snr'] = _snr
+                widgets["latestRawSentenceData"].setText(f"{_packet} ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
                 habitat_uploader.add(_decoded['ukhas_str']+'\n')
+                # Upload the string to Sondehub Amateur
+                sondehub_uploader.add(_decoded)
             except Exception as e:
                 if "CRC Failure" in str(e) and widgets["inhibitCRCSelector"].isChecked():
                     pass
                 else:
-                    widgets["latestRawSentenceData"].setText(f"{_packet}")
+                    widgets["latestRawSentenceData"].setText(f"{_packet} ({_snr:.1f} dB SNR)")
                     widgets["latestDecodedSentenceData"].setText("DECODE FAILED")
                     logging.error(f"Decode Failed: {str(e)}")
         
@@ -786,7 +849,7 @@ def start_decoding():
     if not running:
         # Grab settings off widgets
         _dev_name = widgets["audioDeviceSelector"].currentText()
-        if _dev_name != 'GQRX UDP':
+        if _dev_name != 'UDP Audio (127.0.0.1:7355)':
             _sample_rate = int(widgets["audioSampleRateSelector"].currentText())
             _dev_index = audio_devices[_dev_name]["index"]
         else:
@@ -821,6 +884,7 @@ def start_decoding():
 
         # Ensure the Habitat upload is set correctly.
         habitat_uploader.inhibit = not widgets["habitatUploadSelector"].isChecked()
+        sondehub_uploader.inhibit = not widgets["sondehubUploadSelector"].isChecked()
 
         # Init FFT Processor
         NFFT = 2 ** 13
@@ -849,7 +913,7 @@ def start_decoding():
             horus_modem.set_estimator_limits(DEFAULT_ESTIMATOR_MIN, DEFAULT_ESTIMATOR_MAX)
 
         # Setup Audio (or UDP input)
-        if _dev_name == 'GQRX UDP':
+        if _dev_name == 'UDP Audio (127.0.0.1:7355)':
             audio_stream = UDPStream(
                 udp_port=7355,
                 fs=_sample_rate,
@@ -1007,6 +1071,11 @@ def main():
 
     try:
         habitat_uploader.close()
+    except:
+        pass
+
+    try:
+        sondehub_uploader.close()
     except:
         pass
 
