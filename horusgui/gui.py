@@ -237,6 +237,13 @@ widgets["habitatUploadPosition"].setToolTip(
     "Note that it can take a few minutes for your new information to\n"\
     "appear on the map."
 )
+widgets["dialFreqLabel"] = QtGui.QLabel("<b>Radio Dial Freq (MHz):</b>")
+widgets["dialFreqEntry"] = QtGui.QLineEdit("")
+widgets["dialFreqEntry"].setToolTip(
+    "Optional entry of your radio's dial frequency in MHz.\n"\
+    "Used to provide frequency information on Habitat & SondeHub."\
+)
+
 widgets["saveSettingsButton"] = QtGui.QPushButton("Save Settings")
 
 w1_habitat.addWidget(widgets["habitatUploadLabel"], 0, 0, 1, 1)
@@ -252,9 +259,11 @@ w1_habitat.addWidget(widgets["userAntennaLabel"], 4, 0, 1, 1)
 w1_habitat.addWidget(widgets["userAntennaEntry"], 4, 1, 1, 2)
 w1_habitat.addWidget(widgets["userRadioLabel"], 5, 0, 1, 1)
 w1_habitat.addWidget(widgets["userRadioEntry"], 5, 1, 1, 2)
-w1_habitat.addWidget(widgets["habitatUploadPosition"], 6, 0, 1, 3)
-w1_habitat.layout.setRowStretch(7, 1)
-w1_habitat.addWidget(widgets["saveSettingsButton"], 8, 0, 1, 3)
+w1_habitat.addWidget(widgets["dialFreqLabel"], 6, 0, 1, 1)
+w1_habitat.addWidget(widgets["dialFreqEntry"], 6, 1, 1, 2)
+w1_habitat.addWidget(widgets["habitatUploadPosition"], 7, 0, 1, 3)
+w1_habitat.layout.setRowStretch(8, 1)
+w1_habitat.addWidget(widgets["saveSettingsButton"], 9, 0, 1, 3)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -747,12 +756,20 @@ def handle_new_packet(frame):
         _snr = get_latest_snr()
         #logging.info(f"Packet SNR: {_snr:.2f}")
 
+        try:
+            _radio_dial = float(widgets["dialFreqEntry"].text())*1e6
+            habitat_uploader.last_freq_hz = _radio_dial
+        except:
+            _radio_dial = None
+
         if type(frame.data) == str:
             # RTTY packet handling.
             # Attempt to extract fields from it:
             try:
                 _decoded = parse_ukhas_string(frame.data)
                 _decoded['snr'] = _snr
+                if _radio_dial:
+                    _decoded['f_centre'] = _radio_dial
                 # If we get here, the string is valid!
                 widgets["latestRawSentenceData"].setText(f"{_packet}  ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(f"{_packet}")
@@ -777,6 +794,9 @@ def handle_new_packet(frame):
             try:
                 _decoded = decode_packet(frame.data)
                 _decoded['snr'] = _snr
+                if _radio_dial:
+                    _decoded['f_centre'] = _radio_dial
+
                 widgets["latestRawSentenceData"].setText(f"{_packet} ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
                 habitat_uploader.add(_decoded['ukhas_str']+'\n')
