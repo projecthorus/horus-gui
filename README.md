@@ -6,7 +6,9 @@ Telemetry demodulator for the following modems in use by Project Horus
   * v2 - 32-byte mode, Golay(23,12) FEC
 * RTTY (7N1, 7N2 and 8N2, standard [UKHAS sentences](https://ukhas.org.uk/communication:protocol) with CRC16 only)
 
-This project serves as a graphical front-end to [horusdemodlib](https://github.com/projecthorus/horusdemodlib) a Python/C library of telemetry demodulators based off the [codec2](https://github.com/drowe67/codec2) FSK modem. The core modem used in this library is very well tested, and performs in line with incoherent FSK demodulator theory. The RTTY decoder is approximately [2dB better](http://www.rowetel.com/?p=5906) than dl-fldigi, and the Horus Binary modem approximately 7 dB better again. The Horus Binary v2 mode provides some additional flexibility over the v1 mode, allowing the addition of custom telemetry fields.
+This project serves as a graphical front-end to [horusdemodlib](https://github.com/projecthorus/horusdemodlib/wiki) a Python/C library of telemetry demodulators based off the [codec2](https://github.com/drowe67/codec2) FSK modem. The core modem used in this library is very well tested, and performs in line with incoherent FSK demodulator theory. The RTTY decoder is approximately [2dB better](http://www.rowetel.com/?p=5906) than dl-fldigi, and the Horus Binary modem approximately 7 dB better again. The Horus Binary v2 mode provides some additional flexibility over the v1 mode, allowing the addition of custom telemetry fields.
+
+A short guide on how to receive a Horus Binary payload using Horus-GUI is [available here](https://github.com/projecthorus/horusdemodlib/wiki/1.1-Horus-GUI-Reception-Guide-(Windows-Linux-OSX)).
 
 ### Important Performance Notes
 The FSK demodulator at the core of this application expects the transmitter to behave like a modem. That is, it should:
@@ -38,12 +40,11 @@ Written by:
   * Better build system via Travis (@xssfox)
 * Extras
   * Waterfall Display  (? Need something GPU accelerated if possible...)
-  * rotctld rotator control?
 
 ## Usage
 
 ### Binary Builds
-Until we sort out automated release builds, binary released of horus-gui are available here: https://rfhead.net/horus/horusgui/
+Until we sort out automated release builds, binary releases of horus-gui for Windows and OSX (M1 and Intel) are available here: https://rfhead.net/horus/horusgui/
 
 Please let me know if you have issues!
 
