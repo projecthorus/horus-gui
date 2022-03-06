@@ -31,6 +31,9 @@ default_config = {
     "horus_udp_port": 55672,
     "ozimux_enabled": False,
     "ozimux_udp_port": 55683,
+    "rotator_type": "rotctld",
+    "rotator_host": "localhost",
+    "rotator_port": 4533,
     "payload_list": json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST),
     "custom_field_list": json.dumps({})
 }
@@ -77,7 +80,12 @@ def read_config(widgets):
         write_config()
 
     for _setting in default_config:
-        default_config[_setting] = qt_settings.value(_setting)
+        try:
+            _new_setting = qt_settings.value(_setting)
+            if _new_setting:
+                default_config[_setting] = _new_setting
+        except Exception as e:
+            logging.debug("Missing config setting: " + _setting)
 
     if widgets:
         # Habitat Settings
@@ -106,6 +114,11 @@ def read_config(widgets):
         widgets["horusModemSelector"].setCurrentText(default_config["modem"])
         # Populate the default settings.
         populate_modem_settings(widgets)
+
+        # Rotator Settings
+        widgets["rotatorTypeSelector"].setCurrentText(default_config["rotator_type"])
+        widgets["rotatorHostEntry"].setText(str(default_config["rotator_host"]))
+        widgets["rotatorPortEntry"].setText(str(default_config["rotator_port"]))
 
         if default_config['baud_rate'] != -1:
             widgets["horusModemRateSelector"].setCurrentText(str(default_config['baud_rate']))
@@ -145,6 +158,9 @@ def save_config(widgets):
         default_config["audio_sample_rate"] = widgets["audioSampleRateSelector"].currentText()
         default_config["modem"] = widgets["horusModemSelector"].currentText()
         default_config["baud_rate"] = int(widgets["horusModemRateSelector"].currentText())
+        default_config["rotator_type"] = widgets["rotatorTypeSelector"].currentText()
+        default_config["rotator_host"] = widgets["rotatorHostEntry"].text()
+        default_config["rotator_port"] = int(widgets["rotatorPortEntry"].text())
 
         default_config["payload_list"] = json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST)
         default_config["custom_field_list"] = json.dumps(horusdemodlib.payloads.HORUS_CUSTOM_FIELDS)

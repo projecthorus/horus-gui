@@ -34,6 +34,7 @@ from .config import *
 from .habitat import *
 from .utils import position_info
 from .icon import getHorusIcon
+from .rotators import ROTCTLD, PSTRotator
 from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
@@ -66,6 +67,13 @@ habitat_uploader = None
 sondehub_uploader = None
 
 decoder_init = False
+
+
+# Rotator object
+rotator = None
+rotator_current_az = 0.0
+rotator_current_el = 0.0
+
 
 # Global running indicator
 running = False
@@ -106,6 +114,7 @@ d0 = Dock("Audio", size=(300, 50))
 d0_modem = Dock("Modem", size=(300, 80))
 d0_habitat = Dock("Habitat", size=(300, 200))
 d0_other = Dock("Other", size=(300, 100))
+d0_rotator = Dock("Rotator", size=(300, 100))
 d1 = Dock("Spectrum", size=(800, 350))
 d2_stats = Dock("SNR (dB)", size=(50, 300))
 d2_snr = Dock("SNR Plot", size=(750, 300))
@@ -118,6 +127,7 @@ area.addDock(d1, "right", d0)
 area.addDock(d0_modem, "bottom", d0)
 area.addDock(d0_habitat, "bottom", d0_modem)
 area.addDock(d0_other, "below", d0_habitat)
+area.addDock(d0_rotator, "below", d0_other)
 area.addDock(d2_stats, "bottom", d1)
 area.addDock(d3_data, "bottom", d2_stats)
 area.addDock(d3_position, "bottom", d3_data)
@@ -318,6 +328,66 @@ w1_other.addWidget(widgets["inhibitCRCSelector"], 6, 1, 1, 1)
 w1_other.layout.setRowStretch(7, 1)
 
 d0_other.addWidget(w1_other)
+
+
+w1_rotator = pg.LayoutWidget()
+widgets["rotatorHeaderLabel"] = QtGui.QLabel("<b><u>Rotator Control</u></b>")
+
+widgets["rotatorTypeLabel"] = QtGui.QLabel("<b>Rotator Type:</b>")
+widgets["rotatorTypeSelector"] = QtGui.QComboBox()
+widgets["rotatorTypeSelector"].addItem("rotctld")
+widgets["rotatorTypeSelector"].addItem("PSTRotator")
+
+widgets["rotatorHostLabel"] = QtGui.QLabel("<b>Rotator Hostname:</b>")
+widgets["rotatorHostEntry"] = QtGui.QLineEdit("localhost")
+widgets["rotatorHostEntry"].setToolTip(
+    "Hostname of the rotctld or PSTRotator Server.\n"\
+)
+
+widgets["rotatorPortLabel"] = QtGui.QLabel("<b>Rotator TCP/UDP Port:</b>")
+widgets["rotatorPortEntry"] = QtGui.QLineEdit("4533")
+widgets["rotatorPortEntry"].setMaxLength(5)
+widgets["rotatorPortEntry"].setToolTip(
+    "TCP (rotctld) or UDP (PSTRotator) port to connect to.\n"\
+    "Default for rotctld: 4533\n"\
+    "Default for PSTRotator: 12000"
+)
+widgets["rotatorThresholdLabel"] = QtGui.QLabel("<b>Rotator Movement Threshold:</b>")
+widgets["rotatorThresholdEntry"] = QtGui.QLineEdit("5.0")
+widgets["rotatorThresholdEntry"].setToolTip(
+    "Only move if the angle between the payload position and \n"\
+    "the current rotator position is more than this, in degrees."
+)
+
+widgets["rotatorConnectButton"] = QtGui.QPushButton("Start")
+
+widgets["rotatorCurrentStatusLabel"] = QtGui.QLabel("<b>Status:</b>")
+widgets["rotatorCurrentStatusValue"] = QtGui.QLabel("Not Started.")
+
+widgets["rotatorCurrentPositionLabel"] = QtGui.QLabel("<b>Commanded Az/El:</b>")
+widgets["rotatorCurrentPositionValue"] = QtGui.QLabel("---˚, --˚")
+
+
+
+w1_rotator.addWidget(widgets["rotatorHeaderLabel"], 0, 0, 1, 2)
+w1_rotator.addWidget(widgets["rotatorTypeLabel"], 1, 0, 1, 1)
+w1_rotator.addWidget(widgets["rotatorTypeSelector"], 1, 1, 1, 1)
+w1_rotator.addWidget(widgets["rotatorHostLabel"], 2, 0, 1, 1)
+w1_rotator.addWidget(widgets["rotatorHostEntry"], 2, 1, 1, 1)
+w1_rotator.addWidget(widgets["rotatorPortLabel"], 3, 0, 1, 1)
+w1_rotator.addWidget(widgets["rotatorPortEntry"], 3, 1, 1, 1)
+#w1_rotator.addWidget(widgets["rotatorThresholdLabel"], 4, 0, 1, 1)
+#w1_rotator.addWidget(widgets["rotatorThresholdEntry"], 4, 1, 1, 1)
+w1_rotator.addWidget(widgets["rotatorConnectButton"], 4, 0, 1, 2)
+w1_rotator.addWidget(widgets["rotatorCurrentStatusLabel"], 5, 0, 1, 1)
+w1_rotator.addWidget(widgets["rotatorCurrentStatusValue"], 5, 1, 1, 1)
+w1_rotator.addWidget(widgets["rotatorCurrentPositionLabel"], 6, 0, 1, 1)
+w1_rotator.addWidget(widgets["rotatorCurrentPositionValue"], 6, 1, 1, 1)
+
+w1_rotator.layout.setRowStretch(7, 1)
+
+d0_rotator.addWidget(w1_rotator)
+
 
 # Spectrum Display
 widgets["spectrumPlot"] = pg.PlotWidget(title="Spectra")
@@ -833,6 +903,14 @@ def handle_new_packet(frame):
                     widgets['latestPacketBearingValue'].setText(f"{_position_info['bearing']:.1f}")
                     widgets['latestPacketElevationValue'].setText(f"{_position_info['elevation']:.1f}")
                     widgets['latestPacketRangeValue'].setText(f"{_position_info['straight_distance']/1000.0:.1f}")
+
+                    if rotator:
+                        try:
+                            rotator.set_azel(_position_info['bearing'], _position_info['elevation'], check_response=False)
+                            widgets["rotatorCurrentPositionValue"].setText(f"{_position_info['bearing']:3.1f}˚,  {_position_info['elevation']:2.1f}˚")
+                        except Exception as e:
+                            logging.error("Rotator - Error setting Position: " + str(e))
+                    
             except Exception as e:
                 logging.error(f"Could not calculate relative position to payload - {str(e)}")
             
@@ -1046,6 +1124,70 @@ gui_update_timer.timeout.connect(processQueues)
 gui_update_timer.start(100)
 
 
+
+# Rotator Control
+
+def startstop_rotator():
+    global rotator, widgets
+
+    if rotator is None:
+        # Start a rotator connection.
+
+        try:
+            _host = widgets["rotatorHostEntry"].text()
+            _port = int(widgets["rotatorPortEntry"].text())
+            _threshold = float(widgets["rotatorThresholdEntry"].text())
+        except:
+            widgets["rotatorCurrentStatusValue"].setText("Bad Host/Port")
+            return
+
+        if widgets["rotatorTypeSelector"].currentText() == "rotctld":
+            try:
+                rotator = ROTCTLD(hostname=_host, port=_port, threshold=_threshold)
+                rotator.connect()
+            except Exception as e:
+                logging.error("Rotctld Connect Error: " + str(e))
+                rotator = None
+                return
+        elif widgets["rotatorTypeSelector"].currentText() == "PSTRotator":
+            rotator = PSTRotator(hostname=_host, port=_port, threshold=_threshold)
+
+        else:
+            return
+
+
+        widgets["rotatorCurrentStatusValue"].setText("Connected")
+        widgets["rotatorConnectButton"].setText("Stop")
+    else:
+        # Stop the rotator
+        rotator.close()
+        rotator = None
+        widgets["rotatorConnectButton"].setText("Start")
+        widgets["rotatorCurrentStatusValue"].setText("Not Connected")
+        widgets["rotatorCurrentPositionValue"].setText(f"---˚, --˚")
+
+
+widgets["rotatorConnectButton"].clicked.connect(startstop_rotator)
+
+# def poll_rotator():
+#     global rotator, widgets, rotator_current_az, rotator_current_el
+
+#     if rotator:
+#         _az, _el = rotator.get_azel()
+
+#         if _az != None:
+#             rotator_current_az = _az
+
+#         if _el != None:
+#             rotator_current_el = _el
+
+#         widgets["rotatorCurrentPositionValue"].setText(f"{rotator_current_az:3.1f}˚, {rotator_current_el:2.1f}˚")
+
+# rotator_poll_timer = QtCore.QTimer()
+# rotator_poll_timer.timeout.connect(poll_rotator)
+# rotator_poll_timer.start(2000)
+
+
 class ConsoleHandler(logging.Handler):
     """ Logging handler to write to the GUI console """
 
@@ -1098,6 +1240,12 @@ def main():
         sondehub_uploader.close()
     except:
         pass
+
+    if rotator:
+        try:
+            rotator.close()
+        except:
+            pass
 
 
 if __name__ == "__main__":
