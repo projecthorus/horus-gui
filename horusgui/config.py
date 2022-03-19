@@ -25,6 +25,7 @@ default_config = {
     "habitat_call": "N0CALL",
     "habitat_lat": 0.0,
     "habitat_lon": 0.0,
+    "habitat_alt": 0.0,
     "habitat_antenna": "",
     "habitat_radio": "",
     "horus_udp_enabled": True,
@@ -72,7 +73,7 @@ def read_config(widgets):
     """ Read in configuration settings from Qt """
     global qt_settings, default_config
 
-    OK_VERSIONS = [__version__, '0.3.4', '0.3.1', '0.2.1']
+    OK_VERSIONS = [__version__, '0.3.5', '0.3.4', '0.3.1', '0.2.1']
     
     # Try and read in the version parameter from QSettings
     if qt_settings.value("version") not in OK_VERSIONS:
@@ -93,6 +94,7 @@ def read_config(widgets):
         widgets["userCallEntry"].setText(str(default_config["habitat_call"]))
         widgets["userLatEntry"].setText(str(default_config["habitat_lat"]))
         widgets["userLonEntry"].setText(str(default_config["habitat_lon"]))
+        widgets["userAltEntry"].setText(str(default_config["habitat_alt"]))
         widgets["userAntennaEntry"].setText(str(default_config["habitat_antenna"]))
         widgets["userRadioEntry"].setText(str(default_config["habitat_radio"]))
 
@@ -148,6 +150,7 @@ def save_config(widgets):
         default_config["habitat_call"] = widgets["userCallEntry"].text()
         default_config["habitat_lat"] = float(widgets["userLatEntry"].text())
         default_config["habitat_lon"] = float(widgets["userLonEntry"].text())
+        default_config["habitat_alt"] = float(widgets["userAltEntry"].text())
         default_config["habitat_antenna"] = widgets["userAntennaEntry"].text()
         default_config["habitat_radio"] = widgets["userRadioEntry"].text()
         default_config["horus_udp_enabled"] = widgets["horusUploadSelector"].isChecked()
