@@ -22,6 +22,18 @@ def init_audio(widgets):
     widgets["audioDeviceSelector"].clear()
     # Add in the 'dummy' GQRX UDP interface
     widgets["audioDeviceSelector"].addItem('UDP Audio (127.0.0.1:7355)')
+    
+    
+    # Get list of Host APIs
+    _host_apis = []
+    for y in range(0, pyAudio.get_host_api_count()):
+        _hapi = pyAudio.get_host_api_info_by_index(y)['name']
+        
+        # Shorten the Host API name a little.
+        if 'Windows ' in _hapi:
+            _host_apis.append(_hapi.replace("Windows ",""))
+        else:
+            _host_apis.append(_hapi)
 
     # Iterate through PyAudio devices
     for x in range(0, pyAudio.get_device_count()):
@@ -29,8 +41,9 @@ def init_audio(widgets):
 
         # Does the device have inputs?
         if _dev["maxInputChannels"] > 0:
+            _hapi = _dev['hostApi']
             # Get the name
-            _name = _dev["name"]
+            _name = _dev["name"] + " (" + _host_apis[_hapi] + ")"
             # Add to local store of device info
             audioDevices[_name] = _dev
             # Add to audio device selection list.
@@ -65,6 +78,7 @@ def populate_sample_rates(widgets):
     if _dev_name in audioDevices:
         # Determine which sample rates from a common list are valid for this device.
         _possible_rates = [8000.0, 22050.0, 44100.0, 48000.0, 96000.0]
+        _valid_rates = []
         for _rate in _possible_rates:
             _dev_info = audioDevices[_dev_name]
             _valid = False
@@ -81,10 +95,15 @@ def populate_sample_rates(widgets):
             
             if _valid:
                 widgets["audioSampleRateSelector"].addItem(str(int(_rate)))
+                _valid_rates.append(str(int(_rate)))
 
-        # Pick the default one.
-        _default_samp_rate = int(audioDevices[_dev_name]["defaultSampleRate"])
-        widgets["audioSampleRateSelector"].setCurrentText(str(_default_samp_rate))
+        # Use 48 kHz sample rate if the sound card supports it.
+        if "48000" in _valid_rates: 
+            widgets["audioSampleRateSelector"].setCurrentText("48000")
+        else:
+            # Otherwise use the default.
+            _default_samp_rate = int(audioDevices[_dev_name]["defaultSampleRate"])
+            widgets["audioSampleRateSelector"].setCurrentText(str(_default_samp_rate))
     else:
         logging.error("Audio - Unknown Audio Device")
 
