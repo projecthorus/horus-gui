@@ -58,13 +58,19 @@ class FFTProcess(object):
         # Advance sample buffer
         self.sample_buffer = self.sample_buffer[self.stride * self.sample_width :]
 
-        # Calculate FFT
-        _fft = 20 * np.log10(
-            np.abs(np.fft.fftshift(np.fft.fft(raw_data * self.window)))
-        ) - 20 * np.log10(self.nfft)
-
         # Calculate Maximum value
-        _dbfs = 20*np.log10(raw_data.max())
+        _raw_max = raw_data.max()
+        if(_raw_max>0):
+            # Calculate FFT
+            _fft = 20 * np.log10(
+                np.abs(np.fft.fftshift(np.fft.fft(raw_data * self.window)))
+            ) - 20 * np.log10(self.nfft)
+
+            # Calculate dBFS value.
+            _dbfs = 20*np.log10(_raw_max)
+        else:
+            _fft = np.zeros(self.nfft)*np.nan
+            _dbfs = -99.0
 
         if self.callback != None:
             if self.update_counter % self.update_decimation == 0:

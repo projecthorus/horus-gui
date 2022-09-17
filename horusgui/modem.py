@@ -11,6 +11,7 @@ HORUS_MODEM_LIST = {
         "default_baud_rate": 100,
         "default_tone_spacing": 270,
         "use_mask_estimator": True,
+        "modulation_detail": None
     },
     "RTTY (7N1)": {
         "id": Mode.RTTY_7N1,
@@ -18,6 +19,7 @@ HORUS_MODEM_LIST = {
         "default_baud_rate": 100,
         "default_tone_spacing": 425,
         "use_mask_estimator": False,
+        "modulation_detail": "7N1"
     },
     "RTTY (7N2)": {
         "id": Mode.RTTY_7N2,
@@ -25,6 +27,7 @@ HORUS_MODEM_LIST = {
         "default_baud_rate": 100,
         "default_tone_spacing": 425,
         "use_mask_estimator": False,
+        "modulation_detail": "7N2"
     },
     "RTTY (8N2)": {
         "id": Mode.RTTY_8N2,
@@ -32,6 +35,7 @@ HORUS_MODEM_LIST = {
         "default_baud_rate": 100,
         "default_tone_spacing": 425,
         "use_mask_estimator": False,
+        "modulation_detail": "8N1"
     },
 }
 

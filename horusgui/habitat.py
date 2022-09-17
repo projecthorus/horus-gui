@@ -171,29 +171,32 @@ class HabitatUploader(object):
                 # Wait for a short time before checking the queue again.
                 time.sleep(0.5)
 
-            if not self.position_uploaded:
-                # Validate the lat/lon entries.
-                try:
-                    _lat = float(self.listener_lat)
-                    _lon = float(self.listener_lon)
+            #
+            # Habitat listener position update disabled 2022-09, due to Habitat going away...
+            #
+            # if not self.position_uploaded:
+            #     # Validate the lat/lon entries.
+            #     try:
+            #         _lat = float(self.listener_lat)
+            #         _lon = float(self.listener_lon)
 
-                    if (_lat != 0.0) or (_lon != 0.0):
-                        _success = self.uploadListenerPosition(
-                            self.user_callsign,
-                            _lat,
-                            _lon,
-                            self.listener_radio,
-                            self.listener_antenna,
-                        )
-                    else:
-                        logging.warning("Listener position set to 0.0/0.0 - not uploading.")
+            #         if (_lat != 0.0) or (_lon != 0.0):
+            #             _success = self.uploadListenerPosition(
+            #                 self.user_callsign,
+            #                 _lat,
+            #                 _lon,
+            #                 self.listener_radio,
+            #                 self.listener_antenna,
+            #             )
+            #         else:
+            #             logging.warning("Listener position set to 0.0/0.0 - not uploading.")
                 
-                except Exception as e:
-                    logging.error("Error uploading listener position: %s" % str(e))
+            #     except Exception as e:
+            #         logging.error("Error uploading listener position: %s" % str(e))
 
-                # Set this flag regardless if the upload worked.
-                # The user can trigger a re-upload.
-                self.position_uploaded = True
+            #     # Set this flag regardless if the upload worked.
+            #     # The user can trigger a re-upload.
+            #     self.position_uploaded = True
 
 
         logging.info("Stopped Habitat Uploader Thread.")

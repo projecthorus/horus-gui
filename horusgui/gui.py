@@ -726,8 +726,9 @@ def handle_fft_update(data):
     )
 
     # Ignore NaN values.
-    if np.isnan(_dbfs):
+    if np.isnan(_dbfs) or np.isinf(_dbfs):
         return
+
 
     # Use same IIR to smooth out dBFS readings a little.
     _new_dbfs = float((widgets["audioDbfsValue_float"] * (1 - _tc)) + (_dbfs * _tc))
@@ -735,6 +736,8 @@ def handle_fft_update(data):
     # Set dBFS value
     if (_new_dbfs>-5.0):
         _dbfs_ok = "TOO HIGH"
+    elif (_new_dbfs < -90.0):
+        _dbfs_ok = "NO AUDIO?"
     elif (_new_dbfs < -50.0):
         _dbfs_ok = "LOW"
     else:
@@ -748,10 +751,17 @@ def handle_status_update(status):
     global widgets, habitat
 
     # Update Frequency estimator markers
+    _fest_average = 0.0
+    _fest_count = 0
     for _i in range(len(status.extended_stats.f_est)):
         _fest_pos = float(status.extended_stats.f_est[_i])
         if _fest_pos != 0.0:
+            _fest_average += _fest_pos
+            _fest_count += 1
             widgets["estimatorLines"][_i].setPos(_fest_pos)
+
+    _fest_average = _fest_average/_fest_count
+    widgets["fest_float"] = _fest_average
 
     # Update SNR Plot
     _time = time.time()
@@ -831,11 +841,20 @@ def handle_new_packet(frame):
         _snr = get_latest_snr()
         #logging.info(f"Packet SNR: {_snr:.2f}")
 
+
+        # Grab other metadata out of the GUI
         try:
             _radio_dial = float(widgets["dialFreqEntry"].text())*1e6
+            if widgets["fest_float"]:
+                # Add on the centre frequency estimation onto the dial frequency.
+                _radio_dial += widgets["fest_float"]
+
             habitat_uploader.last_freq_hz = _radio_dial
         except:
             _radio_dial = None
+
+        _baud_rate = int(widgets["horusModemRateSelector"].currentText())
+        _modulation_detail = HORUS_MODEM_LIST[widgets["horusModemSelector"].currentText()]['modulation_detail']
 
         if type(frame.data) == str:
             # RTTY packet handling.
@@ -843,6 +862,9 @@ def handle_new_packet(frame):
             try:
                 _decoded = parse_ukhas_string(frame.data)
                 _decoded['snr'] = _snr
+                _decoded['baud_rate'] = _baud_rate
+                if _modulation_detail:
+                    _decoded['modulation_detail'] = _modulation_detail
                 if _radio_dial:
                     _decoded['f_centre'] = _radio_dial
                 # If we get here, the string is valid!
@@ -869,6 +891,9 @@ def handle_new_packet(frame):
             try:
                 _decoded = decode_packet(frame.data)
                 _decoded['snr'] = _snr
+                _decoded['baud_rate'] = _baud_rate
+                if _modulation_detail:
+                    _decoded['modulation_detail'] = _modulation_detail
                 if _radio_dial:
                     _decoded['f_centre'] = _radio_dial
 
