@@ -35,6 +35,9 @@ default_config = {
     "rotator_type": "rotctld",
     "rotator_host": "localhost",
     "rotator_port": 4533,
+    "logging_enabled": False,
+    "log_format": "CSV",
+    "log_directory": "",
     "payload_list": json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST),
     "custom_field_list": json.dumps({})
 }
@@ -73,7 +76,7 @@ def read_config(widgets):
     """ Read in configuration settings from Qt """
     global qt_settings, default_config
 
-    OK_VERSIONS = [__version__, '0.3.8', '0.3.7', '0.3.6', '0.3.5', '0.3.4', '0.3.1', '0.2.1']
+    OK_VERSIONS = [__version__, '0.3.9', '0.3.8', '0.3.7', '0.3.6', '0.3.5', '0.3.4', '0.3.1', '0.2.1']
     
     # Try and read in the version parameter from QSettings
     if qt_settings.value("version") not in OK_VERSIONS:
@@ -83,14 +86,14 @@ def read_config(widgets):
     for _setting in default_config:
         try:
             _new_setting = qt_settings.value(_setting)
-            if _new_setting:
+            if _new_setting is not None:
                 default_config[_setting] = _new_setting
         except Exception as e:
             logging.debug("Missing config setting: " + _setting)
 
     if widgets:
         # Habitat Settings
-        widgets["habitatUploadSelector"].setChecked(ValueToBool(default_config["habitat_upload_enabled"]))
+        widgets["sondehubUploadSelector"].setChecked(ValueToBool(default_config["habitat_upload_enabled"]))
         widgets["userCallEntry"].setText(str(default_config["habitat_call"]))
         widgets["userLatEntry"].setText(str(default_config["habitat_lat"]))
         widgets["userLonEntry"].setText(str(default_config["habitat_lon"]))
@@ -122,6 +125,11 @@ def read_config(widgets):
         widgets["rotatorHostEntry"].setText(str(default_config["rotator_host"]))
         widgets["rotatorPortEntry"].setText(str(default_config["rotator_port"]))
 
+        # Logging Settings
+        widgets["loggingPathEntry"].setText(str(default_config["log_directory"]))
+        widgets["loggingFormatSelector"].setCurrentText(default_config["log_format"])
+        widgets["enableLoggingSelector"].setChecked(ValueToBool(default_config["logging_enabled"]))
+
         if default_config['baud_rate'] != -1:
             widgets["horusModemRateSelector"].setCurrentText(str(default_config['baud_rate']))
 
@@ -145,8 +153,9 @@ def save_config(widgets):
 
     if widgets:
         default_config["habitat_upload_enabled"] = widgets[
-            "habitatUploadSelector"
+            "sondehubUploadSelector"
         ].isChecked()
+        default_config["version"] = __version__
         default_config["habitat_call"] = widgets["userCallEntry"].text()
         default_config["habitat_lat"] = float(widgets["userLatEntry"].text())
         default_config["habitat_lon"] = float(widgets["userLonEntry"].text())
@@ -164,6 +173,9 @@ def save_config(widgets):
         default_config["rotator_type"] = widgets["rotatorTypeSelector"].currentText()
         default_config["rotator_host"] = widgets["rotatorHostEntry"].text()
         default_config["rotator_port"] = int(widgets["rotatorPortEntry"].text())
+        default_config["logging_enabled"] = widgets["enableLoggingSelector"].isChecked()
+        default_config["log_directory"] = widgets["loggingPathEntry"].text()
+        default_config["log_format"] = widgets["loggingFormatSelector"].currentText()
 
         default_config["payload_list"] = json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST)
         default_config["custom_field_list"] = json.dumps(horusdemodlib.payloads.HORUS_CUSTOM_FIELDS)

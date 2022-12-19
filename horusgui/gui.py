@@ -31,10 +31,10 @@ from .udpaudio import *
 from .fft import *
 from .modem import *
 from .config import *
-from .habitat import *
 from .utils import position_info
 from .icon import getHorusIcon
 from .rotators import ROTCTLD, PSTRotator
+from .telemlogger import TelemetryLogger
 from horusdemodlib.demod import HorusLib, Mode
 from horusdemodlib.decoder import decode_packet, parse_ukhas_string
 from horusdemodlib.payloads import *
@@ -63,8 +63,8 @@ audio_devices = {}
 audio_stream = None
 fft_process = None
 horus_modem = None
-habitat_uploader = None
 sondehub_uploader = None
+telemetry_logger = None
 
 decoder_init = False
 
@@ -112,7 +112,7 @@ win.setWindowIcon(getHorusIcon())
 # Create multiple dock areas, for displaying our data.
 d0 = Dock("Audio", size=(300, 50))
 d0_modem = Dock("Modem", size=(300, 80))
-d0_habitat = Dock("Habitat", size=(300, 200))
+d0_habitat = Dock("SondeHub", size=(300, 200))
 d0_other = Dock("Other", size=(300, 100))
 d0_rotator = Dock("Rotator", size=(300, 100))
 d1 = Dock("Spectrum", size=(800, 350))
@@ -213,10 +213,7 @@ d0_modem.addWidget(w1_modem)
 
 w1_habitat = pg.LayoutWidget()
 # Listener Information
-widgets["habitatHeading"] = QtGui.QLabel("<b>Habitat Settings</b>")
-widgets["habitatUploadLabel"] = QtGui.QLabel("<b>Enable Habitat Upload:</b>")
-widgets["habitatUploadSelector"] = QtGui.QCheckBox()
-widgets["habitatUploadSelector"].setChecked(True)
+widgets["habitatHeading"] = QtGui.QLabel("<b>SondeHub Settings</b>")
 widgets["sondehubUploadLabel"] = QtGui.QLabel("<b>Enable SondeHub-Ham Upload:</b>")
 widgets["sondehubUploadSelector"] = QtGui.QCheckBox()
 widgets["sondehubUploadSelector"].setChecked(True)
@@ -246,7 +243,7 @@ widgets["userRadioEntry"].setToolTip(
 )
 widgets["habitatUploadPosition"] = QtGui.QPushButton("Re-upload Position")
 widgets["habitatUploadPosition"].setToolTip(
-    "Manually re-upload your position information to HabHub and SondeHub.\n"\
+    "Manually re-upload your position information to SondeHub-Amateur.\n"\
     "Note that it can take a few minutes for your new information to\n"\
     "appear on the map."
 )
@@ -254,31 +251,29 @@ widgets["dialFreqLabel"] = QtGui.QLabel("<b>Radio Dial Freq (MHz):</b>")
 widgets["dialFreqEntry"] = QtGui.QLineEdit("")
 widgets["dialFreqEntry"].setToolTip(
     "Optional entry of your radio's dial frequency in MHz.\n"\
-    "Used to provide frequency information on Habitat & SondeHub."\
+    "Used to provide frequency information on SondeHub-Amateur."\
 )
 
 widgets["saveSettingsButton"] = QtGui.QPushButton("Save Settings")
 
-w1_habitat.addWidget(widgets["habitatUploadLabel"], 0, 0, 1, 1)
-w1_habitat.addWidget(widgets["habitatUploadSelector"], 0, 1, 1, 1)
-w1_habitat.addWidget(widgets["sondehubUploadLabel"], 1, 0, 1, 1)
-w1_habitat.addWidget(widgets["sondehubUploadSelector"], 1, 1, 1, 1)
-w1_habitat.addWidget(widgets["userCallLabel"], 2, 0, 1, 1)
-w1_habitat.addWidget(widgets["userCallEntry"], 2, 1, 1, 2)
-w1_habitat.addWidget(widgets["userLocationLabel"], 3, 0, 1, 1)
-w1_habitat.addWidget(widgets["userLatEntry"], 3, 1, 1, 1)
-w1_habitat.addWidget(widgets["userLonEntry"], 3, 2, 1, 1)
-w1_habitat.addWidget(widgets["userAltitudeLabel"], 4, 0, 1, 1)
-w1_habitat.addWidget(widgets["userAltEntry"], 4, 1, 1, 2)
-w1_habitat.addWidget(widgets["userAntennaLabel"], 5, 0, 1, 1)
-w1_habitat.addWidget(widgets["userAntennaEntry"], 5, 1, 1, 2)
-w1_habitat.addWidget(widgets["userRadioLabel"], 6, 0, 1, 1)
-w1_habitat.addWidget(widgets["userRadioEntry"], 6, 1, 1, 2)
-w1_habitat.addWidget(widgets["dialFreqLabel"], 7, 0, 1, 1)
-w1_habitat.addWidget(widgets["dialFreqEntry"], 7, 1, 1, 2)
-w1_habitat.addWidget(widgets["habitatUploadPosition"], 8, 0, 1, 3)
-w1_habitat.layout.setRowStretch(9, 1)
-w1_habitat.addWidget(widgets["saveSettingsButton"], 10, 0, 1, 3)
+w1_habitat.addWidget(widgets["sondehubUploadLabel"], 0, 0, 1, 1)
+w1_habitat.addWidget(widgets["sondehubUploadSelector"], 0, 1, 1, 1)
+w1_habitat.addWidget(widgets["userCallLabel"], 1, 0, 1, 1)
+w1_habitat.addWidget(widgets["userCallEntry"], 1, 1, 1, 2)
+w1_habitat.addWidget(widgets["userLocationLabel"], 2, 0, 1, 1)
+w1_habitat.addWidget(widgets["userLatEntry"], 2, 1, 1, 1)
+w1_habitat.addWidget(widgets["userLonEntry"], 2, 2, 1, 1)
+w1_habitat.addWidget(widgets["userAltitudeLabel"], 3, 0, 1, 1)
+w1_habitat.addWidget(widgets["userAltEntry"], 3, 1, 1, 2)
+w1_habitat.addWidget(widgets["userAntennaLabel"], 4, 0, 1, 1)
+w1_habitat.addWidget(widgets["userAntennaEntry"], 4, 1, 1, 2)
+w1_habitat.addWidget(widgets["userRadioLabel"], 5, 0, 1, 1)
+w1_habitat.addWidget(widgets["userRadioEntry"], 5, 1, 1, 2)
+w1_habitat.addWidget(widgets["dialFreqLabel"], 6, 0, 1, 1)
+w1_habitat.addWidget(widgets["dialFreqEntry"], 6, 1, 1, 2)
+w1_habitat.addWidget(widgets["habitatUploadPosition"], 7, 0, 1, 3)
+w1_habitat.layout.setRowStretch(8, 1)
+w1_habitat.addWidget(widgets["saveSettingsButton"], 9, 0, 1, 3)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -310,6 +305,24 @@ widgets["ozimuxUDPEntry"].setMaxLength(5)
 widgets["ozimuxUDPEntry"].setToolTip(
     "UDP Port to output 'OziMux' UDP messages to."
 )
+widgets["loggingHeaderLabel"] = QtGui.QLabel("<b><u>Logging</u></b>")
+widgets["enableLoggingLabel"] = QtGui.QLabel("<b>Enable Logging:</b>")
+widgets["enableLoggingSelector"] = QtGui.QCheckBox()
+widgets["enableLoggingSelector"].setChecked(False)
+widgets["enableLoggingSelector"].setToolTip(
+    "Enable logging of received telemetry to disk (JSON)"
+)
+widgets["loggingFormatLabel"] = QtGui.QLabel("<b>Log Format:</b>")
+widgets["loggingFormatSelector"] = QtGui.QComboBox()
+widgets["loggingFormatSelector"].addItem("CSV")
+widgets["loggingFormatSelector"].addItem("JSON")
+widgets["loggingPathLabel"] = QtGui.QLabel("<b>Log Directory:</b>")
+widgets["loggingPathEntry"] = QtGui.QLineEdit("")
+widgets["loggingPathEntry"].setToolTip(
+    "Logging Directory"
+)
+widgets["selectLogDirButton"] = QtGui.QPushButton("Select Directory")
+
 widgets["otherHeaderLabel"] = QtGui.QLabel("<b><u>Other Settings</u></b>")
 widgets["inhibitCRCLabel"] = QtGui.QLabel("<b>Hide Failed CRC Errors:</b>")
 widgets["inhibitCRCSelector"] = QtGui.QCheckBox()
@@ -327,10 +340,18 @@ w1_other.addWidget(widgets["ozimuxUploadLabel"], 3, 0, 1, 1)
 w1_other.addWidget(widgets["ozimuxUploadSelector"], 3, 1, 1, 1)
 w1_other.addWidget(widgets["ozimuxUDPLabel"], 4, 0, 1, 1)
 w1_other.addWidget(widgets["ozimuxUDPEntry"], 4, 1, 1, 1)
-w1_other.addWidget(widgets["otherHeaderLabel"], 5, 0, 1, 2)
-w1_other.addWidget(widgets["inhibitCRCLabel"], 6, 0, 1, 1)
-w1_other.addWidget(widgets["inhibitCRCSelector"], 6, 1, 1, 1)
-w1_other.layout.setRowStretch(7, 1)
+w1_other.addWidget(widgets["loggingHeaderLabel"], 5, 0, 1, 2)
+w1_other.addWidget(widgets["enableLoggingLabel"], 6, 0, 1, 1)
+w1_other.addWidget(widgets["enableLoggingSelector"], 6, 1, 1, 1)
+w1_other.addWidget(widgets["loggingFormatLabel"], 7, 0, 1, 1)
+w1_other.addWidget(widgets["loggingFormatSelector"], 7, 1, 1, 1)
+w1_other.addWidget(widgets["loggingPathLabel"], 8, 0, 1, 1)
+w1_other.addWidget(widgets["loggingPathEntry"], 8, 1, 1, 1)
+w1_other.addWidget(widgets["selectLogDirButton"], 9, 0, 1, 2)
+w1_other.addWidget(widgets["otherHeaderLabel"], 10, 0, 1, 2)
+w1_other.addWidget(widgets["inhibitCRCLabel"], 11, 0, 1, 1)
+w1_other.addWidget(widgets["inhibitCRCSelector"], 11, 1, 1, 1)
+w1_other.layout.setRowStretch(12, 1)
 
 d0_other.addWidget(w1_other)
 
@@ -584,21 +605,74 @@ def update_modem_settings():
     global widgets
     populate_modem_settings(widgets)
 
-
 widgets["horusModemSelector"].currentIndexChanged.connect(update_modem_settings)
 
+
+def select_log_directory():
+    global widgets
+    
+    folder = str(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory"))
+
+    if folder is None:
+        logging.info("No log directory selected.")
+        return False
+    else:
+        if folder == "":
+            logging.info("No log directory selected.")
+            return False
+        else:
+            widgets["loggingPathEntry"].setText(folder)
+            widgets["enableLoggingSelector"].setChecked(False)
+            if telemetry_logger:
+                widgets["enableLoggingSelector"].setChecked(True)
+                telemetry_logger.update_log_directory(widgets["loggingPathEntry"].text())
+                telemetry_logger.enabled = True
+            
+            return True
+
+widgets["selectLogDirButton"].clicked.connect(select_log_directory)
+
+
+def set_logging_state():
+    global widgets
+
+    logging_enabled = widgets["enableLoggingSelector"].isChecked()
+
+    if logging_enabled:
+        if widgets["loggingPathEntry"].text() == "":
+            # No logging directory set, prompt user to select one.
+            _success = select_log_directory()
+            if not _success:
+                # User didn't select a directory, set checkbox to false again.
+                logging.error("No log directory selected, logging disabled.")
+                widgets["enableLoggingSelector"].setChecked(False)
+                # Disable logging.
+                if telemetry_logger:
+                    telemetry_logger.enabled = False
+
+                return
+
+        # Enable logging
+        if telemetry_logger:
+            telemetry_logger.enabled = True
+            telemetry_logger.update_log_directory(widgets["loggingPathEntry"].text())
+
+    else:
+        # Disable logging
+        if telemetry_logger:
+            telemetry_logger.enabled = False
+
+widgets["enableLoggingSelector"].clicked.connect(set_logging_state)
+
+def set_logging_format():
+    if telemetry_logger:
+        telemetry_logger.log_format = widgets["loggingFormatSelector"].currentText()
+
+widgets["loggingFormatSelector"].currentIndexChanged.connect(set_logging_format)
 
 # Read in configuration file settings
 read_config(widgets)
 
-# Start Habitat Uploader
-habitat_uploader = HabitatUploader(
-    user_callsign=widgets["userCallEntry"].text(),
-    listener_lat=widgets["userLatEntry"].text(),
-    listener_lon=widgets["userLonEntry"].text(),
-    listener_radio="Horus-GUI v" + __version__ + " " + widgets["userRadioEntry"].text(),
-    listener_antenna=widgets["userAntennaEntry"].text(),
-)
 
 try:
     if float(widgets["userLatEntry"].text()) == 0.0 and float(widgets["userLonEntry"].text()) == 0.0:
@@ -618,18 +692,18 @@ sondehub_uploader = SondehubAmateurUploader(
     software_version = __version__,
 )
 
+telemetry_logger = TelemetryLogger(
+    log_directory = widgets["loggingPathEntry"].text(),
+    log_format = widgets["loggingFormatSelector"].currentText(),
+    enabled = widgets["enableLoggingSelector"].isChecked()
+)
+
 # Handlers for various checkboxes and push-buttons
 
 def habitat_position_reupload():
     """ Trigger a re-upload of user position information """
-    global widgets, habitat_uploader, sondehub_uploader
+    global widgets, sondehub_uploader
 
-    habitat_uploader.user_callsign = widgets["userCallEntry"].text()
-    habitat_uploader.listener_lat = widgets["userLatEntry"].text()
-    habitat_uploader.listener_lon = widgets["userLonEntry"].text()
-    habitat_uploader.listener_radio = "Horus-GUI v" + __version__ + " " + widgets["userRadioEntry"].text()
-    habitat_uploader.listener_antenna = widgets["userAntennaEntry"].text()
-    habitat_uploader.trigger_position_upload()
 
     # Do the same for Sondehub.
     sondehub_uploader.user_callsign = widgets["userCallEntry"].text()
@@ -650,13 +724,10 @@ widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
 
 def habitat_inhibit():
     """ Update the Habitat inhibit flag """
-    global widgets, habitat_uploader, sondehub_uploader
-    habitat_uploader.inhibit = not widgets["habitatUploadSelector"].isChecked()
+    global widgets, sondehub_uploader
     sondehub_uploader.inhibit = not widgets["sondehubUploadSelector"].isChecked()
-    logging.debug(f"Updated Habitat Inhibit state: {habitat_uploader.inhibit}")
     logging.debug(f"Updated Sondebub Inhibit state: {sondehub_uploader.inhibit}")
 
-widgets["habitatUploadSelector"].clicked.connect(habitat_inhibit)
 widgets["sondehubUploadSelector"].clicked.connect(habitat_inhibit)
 
 
@@ -849,7 +920,6 @@ def handle_new_packet(frame):
                 # Add on the centre frequency estimation onto the dial frequency.
                 _radio_dial += widgets["fest_float"]
 
-            habitat_uploader.last_freq_hz = _radio_dial
         except:
             _radio_dial = None
 
@@ -870,10 +940,6 @@ def handle_new_packet(frame):
                 # If we get here, the string is valid!
                 widgets["latestRawSentenceData"].setText(f"{_packet}  ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(f"{_packet}")
-
-                # Upload the string to Habitat
-                _decoded_str = "$$" + frame.data.split('$')[-1] + '\n'
-                habitat_uploader.add(_decoded_str)
 
                 # Upload the string to Sondehub Amateur
                 sondehub_uploader.add(_decoded)
@@ -899,7 +965,6 @@ def handle_new_packet(frame):
 
                 widgets["latestRawSentenceData"].setText(f"{_packet} ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
-                habitat_uploader.add(_decoded['ukhas_str']+'\n')
                 # Upload the string to Sondehub Amateur
                 sondehub_uploader.add(_decoded)
             except Exception as e:
@@ -962,6 +1027,10 @@ def handle_new_packet(frame):
                 _udp_port = int(widgets["ozimuxUDPEntry"].text())
                 send_ozimux_message(_decoded, port=_udp_port)
 
+            # Log telemetry
+            if telemetry_logger:
+                telemetry_logger.add(_decoded)
+
 
 
 
@@ -972,7 +1041,7 @@ def start_decoding():
     Start decoding!
     (Or, stop decoding)
     """
-    global widgets, audio_stream, fft_process, horus_modem, habitat_uploader, audio_devices, running, fft_update_queue, status_update_queue
+    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running, fft_update_queue, status_update_queue
 
     if not running:
         # Grab settings off widgets
@@ -1010,8 +1079,7 @@ def start_decoding():
         widgets["latestPacketBearingValue"].setText("---")
         widgets["latestPacketRangeValue"].setText("---")
 
-        # Ensure the Habitat upload is set correctly.
-        habitat_uploader.inhibit = not widgets["habitatUploadSelector"].isChecked()
+        # Ensure the SondeHub upload is set correctly.
         sondehub_uploader.inhibit = not widgets["sondehubUploadSelector"].isChecked()
 
         # Init FFT Processor
@@ -1262,12 +1330,12 @@ def main():
         pass
 
     try:
-        habitat_uploader.close()
+        sondehub_uploader.close()
     except:
         pass
 
     try:
-        sondehub_uploader.close()
+        telemetry_logger.close()
     except:
         pass
 
