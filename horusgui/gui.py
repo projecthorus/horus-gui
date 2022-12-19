@@ -1031,6 +1031,8 @@ def handle_new_packet(frame):
             if telemetry_logger:
                 telemetry_logger.add(_decoded)
 
+    # Try and force a refresh of the displays.
+    QtGui.QApplication.processEvents()
 
 
 
