@@ -55,7 +55,7 @@ $ git clone https://github.com/projecthorus/horusdemodlib.git
 $ cd horusdemodlib && mkdir build && cd build
 $ cmake ..
 $ make
-$ make install
+$ sudo make install
 ```
 
 ### Grab this Repo
