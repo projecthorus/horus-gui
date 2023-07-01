@@ -18,6 +18,7 @@ import datetime
 import glob
 import logging
 import platform
+import time
 import pyqtgraph as pg
 import numpy as np
 from queue import Queue
@@ -67,6 +68,8 @@ sondehub_uploader = None
 telemetry_logger = None
 
 decoder_init = False
+
+last_packet_time = None
 
 
 # Rotator object
@@ -515,10 +518,14 @@ widgets["latestRawSentenceData"].setReadOnly(True)
 widgets["latestDecodedSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Decoded):</b>")
 widgets["latestDecodedSentenceData"] = QtGui.QLineEdit("NO DATA")
 widgets["latestDecodedSentenceData"].setReadOnly(True)
+widgets["latestDecodedAgeLabel"] = QtGui.QLabel("<b>Last Packet Age:</b>")
+widgets["latestDecodedAgeData"] = QtGui.QLabel("No packet yet!")
 w4_data.addWidget(widgets["latestRawSentenceLabel"], 0, 0, 1, 1)
 w4_data.addWidget(widgets["latestRawSentenceData"], 0, 1, 1, 6)
 w4_data.addWidget(widgets["latestDecodedSentenceLabel"], 1, 0, 1, 1)
 w4_data.addWidget(widgets["latestDecodedSentenceData"], 1, 1, 1, 6)
+w4_data.addWidget(widgets["latestDecodedAgeLabel"], 2, 0, 1, 1)
+w4_data.addWidget(widgets["latestDecodedAgeData"], 2, 1, 1, 2)
 d3_data.addWidget(w4_data)
 
 w4_position = pg.LayoutWidget()
@@ -894,6 +901,7 @@ def add_stats_update(frame):
 
 def handle_new_packet(frame):
     """ Handle receipt of a newly decoded packet """
+    global last_packet_time
 
     if len(frame.data) > 0:
         if type(frame.data) == bytes:
@@ -940,6 +948,7 @@ def handle_new_packet(frame):
                 # If we get here, the string is valid!
                 widgets["latestRawSentenceData"].setText(f"{_packet}  ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(f"{_packet}")
+                last_packet_time = time.time()
 
                 # Upload the string to Sondehub Amateur
                 sondehub_uploader.add(_decoded)
@@ -965,6 +974,7 @@ def handle_new_packet(frame):
 
                 widgets["latestRawSentenceData"].setText(f"{_packet} ({_snr:.1f} dB SNR)")
                 widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
+                last_packet_time = time.time()
                 # Upload the string to Sondehub Amateur
                 sondehub_uploader.add(_decoded)
             except Exception as e:
@@ -1043,9 +1053,13 @@ def start_decoding():
     Start decoding!
     (Or, stop decoding)
     """
-    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running, fft_update_queue, status_update_queue
+    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running, fft_update_queue, status_update_queue, last_packet_time
 
     if not running:
+        # Reset last packet time
+
+        last_packet_time = None
+        widgets['latestDecodedAgeData'].setText("No packet yet!")
         # Grab settings off widgets
         _dev_name = widgets["audioDeviceSelector"].currentText()
         if _dev_name != 'UDP Audio (127.0.0.1:7355)':
@@ -1192,7 +1206,7 @@ def handle_log_update(log_update):
 # GUI Update Loop
 def processQueues():
     """ Read in data from the queues, this decouples the GUI and async inputs somewhat. """
-    global fft_update_queue, status_update_queue, decoder_init, widgets, args
+    global fft_update_queue, status_update_queue, decoder_init, widgets, args, running, last_packet_time
 
     while fft_update_queue.qsize() > 0:
         _data = fft_update_queue.get()
@@ -1208,6 +1222,14 @@ def processQueues():
         _log = log_update_queue.get()
         
         handle_log_update(_log)
+
+    if running:
+        if last_packet_time != None:
+            _time_delta = int(time.time() - last_packet_time)
+            _time_delta_seconds = int(_time_delta%60)
+            _time_delta_minutes = int((_time_delta/60) % 60)
+            _time_delta_hours = int((_time_delta/3600))
+            widgets['latestDecodedAgeData'].setText(f"{_time_delta_hours:02d}:{_time_delta_minutes:02d}:{_time_delta_seconds:02d}")
 
     # Try and force a re-draw.
     QtGui.QApplication.processEvents()

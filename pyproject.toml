@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "horusgui"
-version = "0.3.9"
+version = "0.3.11"
 description = ""
 authors = ["Mark Jessop <vk5qi@rfhead.net>"]
 
