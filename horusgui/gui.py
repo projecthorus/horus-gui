@@ -707,12 +707,10 @@ telemetry_logger = TelemetryLogger(
 
 # Handlers for various checkboxes and push-buttons
 
-def habitat_position_reupload():
+def habitat_position_reupload(upload=True):
     """ Trigger a re-upload of user position information """
     global widgets, sondehub_uploader
 
-
-    # Do the same for Sondehub.
     sondehub_uploader.user_callsign = widgets["userCallEntry"].text()
     sondehub_uploader.user_radio = "Horus-GUI v" + __version__ + " " + widgets["userRadioEntry"].text()
     sondehub_uploader.user_antenna = widgets["userAntennaEntry"].text()
@@ -724,9 +722,17 @@ def habitat_position_reupload():
     except:
         sondehub_uploader.user_position = None
 
-    sondehub_uploader.last_user_position_upload = 0
+    if upload:
+        sondehub_uploader.last_user_position_upload = 0
 
 widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
+
+
+# Update uploader info as soon as it's edited, to ensure we upload with the latest user callsign
+def update_uploader_details():
+    habitat_position_reupload(False)
+
+widgets["userCallEntry"].textEdited.connect(update_uploader_details)
 
 
 def habitat_inhibit():
