@@ -85,6 +85,7 @@ running = False
 parser = argparse.ArgumentParser(description="Project Horus GUI", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--payload-id-list", type=str, default=None, help="Use supplied Payload ID List instead of downloading a new one.")
 parser.add_argument("--custom-field-list", type=str, default=None, help="Use supplied Custom Field List instead of downloading a new one.")
+parser.add_argument("--libfix", action="store_true", default=False, help="Search for libhorus.dll/so in ./ instead of on the path.")
 parser.add_argument("-v", "--verbose", action="store_true", default=False, help="Verbose output (set logging level to DEBUG)")
 args = parser.parse_args()
 
@@ -1059,7 +1060,7 @@ def start_decoding():
     Start decoding!
     (Or, stop decoding)
     """
-    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running, fft_update_queue, status_update_queue, last_packet_time
+    global widgets, audio_stream, fft_process, horus_modem, audio_devices, running, fft_update_queue, status_update_queue, last_packet_time, args
 
     if not running:
         # Reset last packet time
@@ -1116,7 +1117,12 @@ def start_decoding():
         )
 
         # Setup Modem
+        _libpath = ""
+        if args.libfix:
+            _libpath = "./"
+            
         horus_modem = HorusLib(
+            libpath=_libpath,
             mode=_modem_id,
             rate=_modem_rate,
             tone_spacing=_modem_tone_spacing,
