@@ -44,7 +44,7 @@ Written by:
 ## Usage
 
 ### Binary Builds
-Until we sort out automated release builds, binary releases of horus-gui for Windows and OSX (M1 and Intel) are available here: https://rfhead.net/horus/horusgui/
+Binary builds for some platforms are available on the releases page: https://github.com/projecthorus/horus-gui/releases
 
 Please let me know if you have issues!
 
