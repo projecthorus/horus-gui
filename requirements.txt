@@ -5,4 +5,4 @@ PyQt5
 pyqtgraph==0.12.4
 ruamel.yaml
 requests
-horusdemodlib>=0.3.6
+horusdemodlib>=0.3.12

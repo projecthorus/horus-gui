@@ -1016,7 +1016,7 @@ def handle_new_packet(frame):
                     widgets['latestPacketElevationValue'].setText(f"{_position_info['elevation']:.1f}")
                     widgets['latestPacketRangeValue'].setText(f"{_position_info['straight_distance']/1000.0:.1f}")
 
-                    if rotator:
+                    if rotator and not ( _decoded['latitude'] == 0.0 and _decoded['longitude'] == 0.0 ):
                         try:
                             rotator.set_azel(_position_info['bearing'], _position_info['elevation'], check_response=False)
                             widgets["rotatorCurrentPositionValue"].setText(f"{_position_info['bearing']:3.1f}˚,  {_position_info['elevation']:2.1f}˚")
