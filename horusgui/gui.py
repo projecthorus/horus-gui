@@ -254,7 +254,7 @@ widgets["habitatUploadPosition"].setToolTip(
 widgets["dialFreqLabel"] = QtGui.QLabel("<b>Radio Dial Freq (MHz):</b>")
 widgets["dialFreqEntry"] = QtGui.QLineEdit("")
 widgets["dialFreqEntry"].setToolTip(
-    "Optional entry of your radio's dial frequency in MHz.\n"\
+    "Optional entry of your radio's dial frequency in MHz (e.g. 437.600).\n"\
     "Used to provide frequency information on SondeHub-Amateur."\
 )
 
@@ -929,14 +929,19 @@ def handle_new_packet(frame):
 
 
         # Grab other metadata out of the GUI
-        try:
-            _radio_dial = float(widgets["dialFreqEntry"].text())*1e6
-            if widgets["fest_float"]:
-                # Add on the centre frequency estimation onto the dial frequency.
-                _radio_dial += widgets["fest_float"]
+        _radio_dial = None
 
-        except:
-            _radio_dial = None
+        if widgets["dialFreqEntry"].text() != "":
+            try:
+                _radio_dial = float(widgets["dialFreqEntry"].text())*1e6
+                if widgets["fest_float"]:
+                    # Add on the centre frequency estimation onto the dial frequency.
+                    _radio_dial += widgets["fest_float"]
+
+            except:
+                logging.warning("Could not parse radio dial frequency. This must be in MMM.KKK format e.g. 437.600")
+                _radio_dial = None
+        
 
         _baud_rate = int(widgets["horusModemRateSelector"].currentText())
         _modulation_detail = HORUS_MODEM_LIST[widgets["horusModemSelector"].currentText()]['modulation_detail']
