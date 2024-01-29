@@ -53,9 +53,9 @@ DEFAULT_ESTIMATOR_MAX = 4000
 widgets = {}
 
 # Queues for handling updates to image / status indications.
-fft_update_queue = Queue(256)
-status_update_queue = Queue(256)
-log_update_queue = Queue(256)
+fft_update_queue = Queue(1024)
+status_update_queue = Queue(1024)
+log_update_queue = Queue(2048)
 
 # List of audio devices and their info
 audio_devices = {}
@@ -1341,7 +1341,7 @@ class ConsoleHandler(logging.Handler):
         try:
             self.log_queue.put_nowait(_text)
         except:
-            print("Queue full!")
+            print("Console Log Queue full!")
 
 
 
