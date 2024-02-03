@@ -226,7 +226,7 @@ widgets["userCallEntry"] = QtGui.QLineEdit("N0CALL")
 widgets["userCallEntry"].setMaxLength(20)
 widgets["userCallEntry"].setToolTip(
     "Your station callsign, which doesn't necessarily need to be an\n"\
-    "amateur radio callsign."
+    "amateur radio callsign, just something unique!"
 )
 widgets["userLocationLabel"] = QtGui.QLabel("<b>Lat/Lon:</b>")
 widgets["userLatEntry"] = QtGui.QLineEdit("0.0")
@@ -963,6 +963,9 @@ def handle_new_packet(frame):
                 last_packet_time = time.time()
 
                 # Upload the string to Sondehub Amateur
+                if widgets["userCallEntry"].text() == "N0CALL":
+                    logging.warning("Uploader callsign is set as N0CALL. Please change this, otherwise telemetry data may be discarded!")
+                
                 sondehub_uploader.add(_decoded)
 
             except Exception as e:
@@ -988,6 +991,9 @@ def handle_new_packet(frame):
                 widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
                 last_packet_time = time.time()
                 # Upload the string to Sondehub Amateur
+                if widgets["userCallEntry"].text() == "N0CALL":
+                    logging.warning("Uploader callsign is set as N0CALL. Please change this, otherwise telemetry data may be discarded!")
+
                 sondehub_uploader.add(_decoded)
             except Exception as e:
                 if "CRC Failure" in str(e) and widgets["inhibitCRCSelector"].isChecked():
@@ -1070,6 +1076,15 @@ def start_decoding():
     if not running:
         # Reset last packet time
 
+        if widgets["userCallEntry"].text() == "N0CALL":
+            # We don't allow the decoder to start if the callsign is still at the default.
+            _error_msgbox = QtWidgets.QMessageBox()
+            _error_msgbox.setWindowTitle("Uploader Callsign Invalid")
+            _error_msgbox.setText("Please change your SondeHub uploader callsign before starting!")
+            _error_msgbox.exec_()
+
+            return
+        
         last_packet_time = None
         widgets['latestDecodedAgeData'].setText("No packet yet!")
         # Grab settings off widgets
@@ -1351,6 +1366,7 @@ logging.getLogger().addHandler(console_handler)
 
 
 logging.info("Started GUI.")
+
 
 
 # Main
