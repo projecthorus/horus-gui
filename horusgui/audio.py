@@ -48,6 +48,7 @@ def init_audio(widgets):
             audioDevices[_name] = _dev
             # Add to audio device selection list.
             widgets["audioDeviceSelector"].addItem(_name)
+            logging.debug(f"Found audio device: {_name}")
 
     # Select first item.
     if len(list(audioDevices.keys())) > 0:
@@ -74,6 +75,8 @@ def populate_sample_rates(widgets):
         # Add in fixed sample rate for GQRX/SDR++ input, which only outputs at 48 kHz.
         widgets["audioSampleRateSelector"].addItem(str(48000))
         widgets["audioSampleRateSelector"].setCurrentIndex(0)
+
+        return
 
     if _dev_name in audioDevices:
         # Determine which sample rates from a common list are valid for this device.
@@ -105,7 +108,7 @@ def populate_sample_rates(widgets):
             _default_samp_rate = int(audioDevices[_dev_name]["defaultSampleRate"])
             widgets["audioSampleRateSelector"].setCurrentText(str(_default_samp_rate))
     else:
-        logging.error("Audio - Unknown Audio Device")
+        logging.error(f"Audio - Unknown Audio Device ({_dev_name})")
 
 
 class AudioStream(object):
