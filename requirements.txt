@@ -3,6 +3,5 @@ pyaudio
 crcmod
 PyQt6
 pyqtgraph
-ruamel.yaml
 requests
 horusdemodlib>=0.3.12

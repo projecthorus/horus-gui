@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from pyqtgraph.Qt import QtCore
-from ruamel.yaml import YAML
 from . import __version__
 from .modem import populate_modem_settings
 from .audio import populate_sample_rates

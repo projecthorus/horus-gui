@@ -66,8 +66,6 @@ $ cd horus-gui
 
 ### (Optional) Create a Virtual Environment
 
-**Warning - Python 3.10 will not work until a known compatability issue with pyaudio has been fixed. Use Python 3.9.**
-
 Create a virtual environment and install dependencies.
 ```console
 $ python3 -m venv venv
@@ -83,9 +81,19 @@ $ pip install -r requirements.txt
 ```
 
 NOTE: Under linux based distros, you may also need to install `python3-distutils` and `python-setuptools`. If you get errors relating to pyaudio when trying to install into a venv, make sure that portaudio is installed (`libportaudio-dev` or `portaudio19-dev` under Linux distros, or `portaudio` under Macports), and then install pyaudio pointing to the portaudio lib by running:
+
+On Linux:
 ```
-(Linux) $ pip install --global-option='build_ext' --global-option='-I/usr/include' --global-option='-L/usr/lib' pyaudio
-(OSX)   $ pip install --global-option='build_ext' --global-option='-I/opt/local/include' --global-option='-L/opt/local/lib' pyaudio
+$ export CFLAGS="-I/usr/include"
+$ export LDFLAGS="-L/usr/lib"
+(venv) $ pip install pyaudio
+```
+
+On OSX using Macports:
+```
+$ export CFLAGS="-I/opt/local/include"
+$ export LDFLAGS="-L/opt/local/lib"
+(venv) $ pip install pyaudio
 ```
 You should then be able to re-run the install requirements command above.
 
@@ -101,12 +109,12 @@ entry points so it can be used like a normal install.
 
 ### Run
 ```console
-$ python -m horusgui.gui
+$ (venv) python -m horusgui.gui
 ```
 
 Or run the helper startup script:
 ```console
-$ python horus-gui.py
+$ (venv) python horus-gui.py
 ```
 
 ### Updating
@@ -127,4 +135,4 @@ $ . venv/bin/activate  (if using a venv)
 $ pip install horusdemodlib --upgrade
 ```
 
-You should then be OK to run horusgui. Configuration settings will be reset when the version number of horus-gui is incremented, until I settle on on a configuration parameter set.
+You should then be OK to run horusgui.
