@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "horusgui"
-version = "0.4.0"
+version = "0.3.16"
 description = ""
 authors = ["Mark Jessop <vk5qi@rfhead.net>"]
 
@@ -8,10 +8,9 @@ authors = ["Mark Jessop <vk5qi@rfhead.net>"]
 python = "^3.6"
 requests = "^2.24.0"
 crcmod = "^1.7"
-PyQt6 = "^6.6.0"
-pyqtgraph = "^0.13.0"
+PyQt5 = "^5.15.0"
+pyqtgraph = "^0.12.3"
 pyaudio = "^0.2.11"
-"ruamel.yaml" = "^0.16.10"
 horusdemodlib = "^0.3.13"
 
 [tool.poetry.dev-dependencies]

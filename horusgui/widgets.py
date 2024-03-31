@@ -1,5 +1,5 @@
 # Useful widgets
-from PyQt6 import QtWidgets
+from PyQt5 import QtWidgets
 
 # Useful class for adding horizontal lines.
 class QHLine(QtWidgets.QFrame):

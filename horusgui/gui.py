@@ -23,7 +23,7 @@ import pyqtgraph as pg
 import numpy as np
 from queue import Queue
 #from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-from PyQt6 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui
 from pyqtgraph.dockarea import *
 from threading import Thread
 

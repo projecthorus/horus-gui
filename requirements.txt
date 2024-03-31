@@ -1,7 +1,7 @@
 numpy
 pyaudio
 crcmod
-PyQt6
+PyQt5
 pyqtgraph
 requests
 horusdemodlib>=0.3.12

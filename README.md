@@ -95,6 +95,14 @@ $ export CFLAGS="-I/opt/local/include"
 $ export LDFLAGS="-L/opt/local/lib"
 (venv) $ pip install pyaudio
 ```
+
+On OSX using Homebrew
+```
+$ export CFLAGS="-I/opt/homebrew/include" 
+$ export LDFLAGS="-L/opt/homebrew/lib"
+(venv) $ pip install pyaudio
+```
+
 You should then be able to re-run the install requirements command above.
 
 ### Install Package
