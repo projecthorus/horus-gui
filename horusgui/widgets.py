@@ -1,9 +1,9 @@
 # Useful widgets
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from PyQt6 import QtWidgets
 
 # Useful class for adding horizontal lines.
-class QHLine(QtGui.QFrame):
+class QHLine(QtWidgets.QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
-        self.setFrameShape(QtGui.QFrame.HLine)
-        self.setFrameShadow(QtGui.QFrame.Sunken)
+        self.setFrameShape(QtWidgets.QFrame.HLine)
+        self.setFrameShadow(QtWidgets.QFrame.Sunken)

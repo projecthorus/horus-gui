@@ -22,7 +22,8 @@ import time
 import pyqtgraph as pg
 import numpy as np
 from queue import Queue
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+#from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from PyQt6 import QtWidgets, QtGui
 from pyqtgraph.dockarea import *
 from threading import Thread
 
@@ -107,7 +108,7 @@ logging.basicConfig(
 pg.mkQApp()
 
 # GUI LAYOUT - Gtk Style!
-win = QtGui.QMainWindow()
+win = QtWidgets.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 win.setWindowTitle(f"Horus Telemetry GUI - v{__version__}")
@@ -143,14 +144,14 @@ d0_habitat.raiseDock()
 # Controls
 w1_audio = pg.LayoutWidget()
 # TNC Connection
-widgets["audioDeviceLabel"] = QtGui.QLabel("<b>Audio Device:</b>")
-widgets["audioDeviceSelector"] = QtGui.QComboBox()
+widgets["audioDeviceLabel"] = QtWidgets.QLabel("<b>Audio Device:</b>")
+widgets["audioDeviceSelector"] = QtWidgets.QComboBox()
 
-widgets["audioSampleRateLabel"] = QtGui.QLabel("<b>Sample Rate (Hz):</b>")
-widgets["audioSampleRateSelector"] = QtGui.QComboBox()
+widgets["audioSampleRateLabel"] = QtWidgets.QLabel("<b>Sample Rate (Hz):</b>")
+widgets["audioSampleRateSelector"] = QtWidgets.QComboBox()
 
-widgets["audioDbfsLabel"] = QtGui.QLabel("<b>Input Level (dBFS):</b>")
-widgets["audioDbfsValue"] = QtGui.QLabel("--")
+widgets["audioDbfsLabel"] = QtWidgets.QLabel("<b>Input Level (dBFS):</b>")
+widgets["audioDbfsValue"] = QtWidgets.QLabel("--")
 widgets["audioDbfsValue_float"] = 0.0
 
 w1_audio.addWidget(widgets["audioDeviceLabel"], 0, 0, 1, 1)
@@ -165,29 +166,29 @@ w1_modem = pg.LayoutWidget()
 
 
 # Modem Parameters
-widgets["horusModemLabel"] = QtGui.QLabel("<b>Mode:</b>")
-widgets["horusModemSelector"] = QtGui.QComboBox()
+widgets["horusModemLabel"] = QtWidgets.QLabel("<b>Mode:</b>")
+widgets["horusModemSelector"] = QtWidgets.QComboBox()
 
-widgets["horusModemRateLabel"] = QtGui.QLabel("<b>Baudrate:</b>")
-widgets["horusModemRateSelector"] = QtGui.QComboBox()
+widgets["horusModemRateLabel"] = QtWidgets.QLabel("<b>Baudrate:</b>")
+widgets["horusModemRateSelector"] = QtWidgets.QComboBox()
 
-widgets["horusMaskEstimatorLabel"] = QtGui.QLabel("<b>Enable Mask Estim.:</b>")
-widgets["horusMaskEstimatorSelector"] = QtGui.QCheckBox()
+widgets["horusMaskEstimatorLabel"] = QtWidgets.QLabel("<b>Enable Mask Estim.:</b>")
+widgets["horusMaskEstimatorSelector"] = QtWidgets.QCheckBox()
 widgets["horusMaskEstimatorSelector"].setToolTip(
     "Enable the mask frequency estimator, which makes uses of the \n"\
     "tone spacing value entered below as extra input to the frequency\n"\
     "estimator. This can help decode performance in very weak signal conditions."
 )
 
-widgets["horusMaskSpacingLabel"] = QtGui.QLabel("<b>Tone Spacing (Hz):</b>")
-widgets["horusMaskSpacingEntry"] = QtGui.QLineEdit("270")
+widgets["horusMaskSpacingLabel"] = QtWidgets.QLabel("<b>Tone Spacing (Hz):</b>")
+widgets["horusMaskSpacingEntry"] = QtWidgets.QLineEdit("270")
 widgets["horusMaskSpacingEntry"].setToolTip(
     "If the tone spacing of the transmitter is known, it can be entered here,\n"\
     "and used with the mask estimator option above. The default tone spacing for\n"\
     "a RS41-based transmitter is 270 Hz."
 )
-widgets["horusManualEstimatorLabel"] = QtGui.QLabel("<b>Manual Estim. Limits:</b>")
-widgets["horusManualEstimatorSelector"] = QtGui.QCheckBox()
+widgets["horusManualEstimatorLabel"] = QtWidgets.QLabel("<b>Manual Estim. Limits:</b>")
+widgets["horusManualEstimatorSelector"] = QtWidgets.QCheckBox()
 widgets["horusManualEstimatorSelector"].setToolTip(
     "Enables manual selection of the frequency estimator limits. This will enable\n"\
     "a slidable area on the spectrum display, which can be used to select the frequency\n"\
@@ -197,7 +198,7 @@ widgets["horusManualEstimatorSelector"].setToolTip(
 )
 
 # Start/Stop
-widgets["startDecodeButton"] = QtGui.QPushButton("Start")
+widgets["startDecodeButton"] = QtWidgets.QPushButton("Start")
 widgets["startDecodeButton"].setEnabled(False)
 
 w1_modem.addWidget(widgets["horusModemLabel"], 0, 0, 1, 1)
@@ -217,48 +218,48 @@ d0_modem.addWidget(w1_modem)
 
 w1_habitat = pg.LayoutWidget()
 # Listener Information
-widgets["habitatHeading"] = QtGui.QLabel("<b>SondeHub Settings</b>")
-widgets["sondehubUploadLabel"] = QtGui.QLabel("<b>Enable SondeHub-Ham Upload:</b>")
-widgets["sondehubUploadSelector"] = QtGui.QCheckBox()
+widgets["habitatHeading"] = QtWidgets.QLabel("<b>SondeHub Settings</b>")
+widgets["sondehubUploadLabel"] = QtWidgets.QLabel("<b>Enable SondeHub-Ham Upload:</b>")
+widgets["sondehubUploadSelector"] = QtWidgets.QCheckBox()
 widgets["sondehubUploadSelector"].setChecked(True)
-widgets["userCallLabel"] = QtGui.QLabel("<b>Callsign:</b>")
-widgets["userCallEntry"] = QtGui.QLineEdit("N0CALL")
+widgets["userCallLabel"] = QtWidgets.QLabel("<b>Callsign:</b>")
+widgets["userCallEntry"] = QtWidgets.QLineEdit("N0CALL")
 widgets["userCallEntry"].setMaxLength(20)
 widgets["userCallEntry"].setToolTip(
     "Your station callsign, which doesn't necessarily need to be an\n"\
     "amateur radio callsign, just something unique!"
 )
-widgets["userLocationLabel"] = QtGui.QLabel("<b>Lat/Lon:</b>")
-widgets["userLatEntry"] = QtGui.QLineEdit("0.0")
+widgets["userLocationLabel"] = QtWidgets.QLabel("<b>Lat/Lon:</b>")
+widgets["userLatEntry"] = QtWidgets.QLineEdit("0.0")
 widgets["userLatEntry"].setToolTip("Station Latitude in Decimal Degrees, e.g. -34.123456")
-widgets["userLonEntry"] = QtGui.QLineEdit("0.0")
+widgets["userLonEntry"] = QtWidgets.QLineEdit("0.0")
 widgets["userLonEntry"].setToolTip("Station Longitude in Decimal Degrees, e.g. 138.123456")
-widgets["userAltitudeLabel"] = QtGui.QLabel("<b>Altitude:</b>")
-widgets["userAltEntry"] = QtGui.QLineEdit("0.0")
+widgets["userAltitudeLabel"] = QtWidgets.QLabel("<b>Altitude:</b>")
+widgets["userAltEntry"] = QtWidgets.QLineEdit("0.0")
 widgets["userAltEntry"].setToolTip("Station Altitude in Metres Above Sea Level.")
-widgets["userAntennaLabel"] = QtGui.QLabel("<b>Antenna:</b>")
-widgets["userAntennaEntry"] = QtGui.QLineEdit("")
+widgets["userAntennaLabel"] = QtWidgets.QLabel("<b>Antenna:</b>")
+widgets["userAntennaEntry"] = QtWidgets.QLineEdit("")
 widgets["userAntennaEntry"].setToolTip("A text description of your station's antenna.")
-widgets["userRadioLabel"] = QtGui.QLabel("<b>Radio:</b>")
-widgets["userRadioEntry"] = QtGui.QLineEdit("Horus-GUI " + __version__)
+widgets["userRadioLabel"] = QtWidgets.QLabel("<b>Radio:</b>")
+widgets["userRadioEntry"] = QtWidgets.QLineEdit("Horus-GUI " + __version__)
 widgets["userRadioEntry"].setToolTip(
     "A text description of your station's radio setup.\n"\
     "This field will be automatically prefixed with Horus-GUI."
 )
-widgets["habitatUploadPosition"] = QtGui.QPushButton("Re-upload Position")
+widgets["habitatUploadPosition"] = QtWidgets.QPushButton("Re-upload Position")
 widgets["habitatUploadPosition"].setToolTip(
     "Manually re-upload your position information to SondeHub-Amateur.\n"\
     "Note that it can take a few minutes for your new information to\n"\
     "appear on the map."
 )
-widgets["dialFreqLabel"] = QtGui.QLabel("<b>Radio Dial Freq (MHz):</b>")
-widgets["dialFreqEntry"] = QtGui.QLineEdit("")
+widgets["dialFreqLabel"] = QtWidgets.QLabel("<b>Radio Dial Freq (MHz):</b>")
+widgets["dialFreqEntry"] = QtWidgets.QLineEdit("")
 widgets["dialFreqEntry"].setToolTip(
     "Optional entry of your radio's dial frequency in MHz (e.g. 437.600).\n"\
     "Used to provide frequency information on SondeHub-Amateur."\
 )
 
-widgets["saveSettingsButton"] = QtGui.QPushButton("Save Settings")
+widgets["saveSettingsButton"] = QtWidgets.QPushButton("Save Settings")
 
 w1_habitat.addWidget(widgets["sondehubUploadLabel"], 0, 0, 1, 1)
 w1_habitat.addWidget(widgets["sondehubUploadSelector"], 0, 1, 1, 1)
@@ -282,54 +283,54 @@ w1_habitat.addWidget(widgets["saveSettingsButton"], 9, 0, 1, 3)
 d0_habitat.addWidget(w1_habitat)
 
 w1_other = pg.LayoutWidget()
-widgets["horusHeaderLabel"] = QtGui.QLabel("<b><u>Telemetry Forwarding</u></b>")
-widgets["horusUploadLabel"] = QtGui.QLabel("<b>Enable Horus UDP Output:</b>")
-widgets["horusUploadSelector"] = QtGui.QCheckBox()
+widgets["horusHeaderLabel"] = QtWidgets.QLabel("<b><u>Telemetry Forwarding</u></b>")
+widgets["horusUploadLabel"] = QtWidgets.QLabel("<b>Enable Horus UDP Output:</b>")
+widgets["horusUploadSelector"] = QtWidgets.QCheckBox()
 widgets["horusUploadSelector"].setChecked(True)
 widgets["horusUploadSelector"].setToolTip(
     "Enable output of 'Horus UDP' JSON messages. These are emitted as a JSON object\n"\
     "and contain the fields: callsign, time, latitude, longitude, altitude, snr"\
 )
-widgets["horusUDPLabel"] = QtGui.QLabel("<b>Horus UDP Port:</b>")
-widgets["horusUDPEntry"] = QtGui.QLineEdit("55672")
+widgets["horusUDPLabel"] = QtWidgets.QLabel("<b>Horus UDP Port:</b>")
+widgets["horusUDPEntry"] = QtWidgets.QLineEdit("55672")
 widgets["horusUDPEntry"].setMaxLength(5)
 widgets["horusUDPEntry"].setToolTip(
     "UDP Port to output 'Horus UDP' JSON messages to."
 )
-widgets["ozimuxUploadLabel"] = QtGui.QLabel("<b>Enable OziMux UDP Output:</b>")
-widgets["ozimuxUploadSelector"] = QtGui.QCheckBox()
+widgets["ozimuxUploadLabel"] = QtWidgets.QLabel("<b>Enable OziMux UDP Output:</b>")
+widgets["ozimuxUploadSelector"] = QtWidgets.QCheckBox()
 widgets["ozimuxUploadSelector"].setChecked(False)
 widgets["ozimuxUploadSelector"].setToolTip(
     "Output OziMux UDP messages. These are of the form:\n"\
     "'TELEMETRY,HH:MM:SS,lat,lon,alt\\n'"
 )
-widgets["ozimuxUDPLabel"] = QtGui.QLabel("<b>Ozimux UDP Port:</b>")
-widgets["ozimuxUDPEntry"] = QtGui.QLineEdit("55683")
+widgets["ozimuxUDPLabel"] = QtWidgets.QLabel("<b>Ozimux UDP Port:</b>")
+widgets["ozimuxUDPEntry"] = QtWidgets.QLineEdit("55683")
 widgets["ozimuxUDPEntry"].setMaxLength(5)
 widgets["ozimuxUDPEntry"].setToolTip(
     "UDP Port to output 'OziMux' UDP messages to."
 )
-widgets["loggingHeaderLabel"] = QtGui.QLabel("<b><u>Logging</u></b>")
-widgets["enableLoggingLabel"] = QtGui.QLabel("<b>Enable Logging:</b>")
-widgets["enableLoggingSelector"] = QtGui.QCheckBox()
+widgets["loggingHeaderLabel"] = QtWidgets.QLabel("<b><u>Logging</u></b>")
+widgets["enableLoggingLabel"] = QtWidgets.QLabel("<b>Enable Logging:</b>")
+widgets["enableLoggingSelector"] = QtWidgets.QCheckBox()
 widgets["enableLoggingSelector"].setChecked(False)
 widgets["enableLoggingSelector"].setToolTip(
     "Enable logging of received telemetry to disk (JSON)"
 )
-widgets["loggingFormatLabel"] = QtGui.QLabel("<b>Log Format:</b>")
-widgets["loggingFormatSelector"] = QtGui.QComboBox()
+widgets["loggingFormatLabel"] = QtWidgets.QLabel("<b>Log Format:</b>")
+widgets["loggingFormatSelector"] = QtWidgets.QComboBox()
 widgets["loggingFormatSelector"].addItem("CSV")
 widgets["loggingFormatSelector"].addItem("JSON")
-widgets["loggingPathLabel"] = QtGui.QLabel("<b>Log Directory:</b>")
-widgets["loggingPathEntry"] = QtGui.QLineEdit("")
+widgets["loggingPathLabel"] = QtWidgets.QLabel("<b>Log Directory:</b>")
+widgets["loggingPathEntry"] = QtWidgets.QLineEdit("")
 widgets["loggingPathEntry"].setToolTip(
     "Logging Directory"
 )
-widgets["selectLogDirButton"] = QtGui.QPushButton("Select Directory")
+widgets["selectLogDirButton"] = QtWidgets.QPushButton("Select Directory")
 
-widgets["otherHeaderLabel"] = QtGui.QLabel("<b><u>Other Settings</u></b>")
-widgets["inhibitCRCLabel"] = QtGui.QLabel("<b>Hide Failed CRC Errors:</b>")
-widgets["inhibitCRCSelector"] = QtGui.QCheckBox()
+widgets["otherHeaderLabel"] = QtWidgets.QLabel("<b><u>Other Settings</u></b>")
+widgets["inhibitCRCLabel"] = QtWidgets.QLabel("<b>Hide Failed CRC Errors:</b>")
+widgets["inhibitCRCSelector"] = QtWidgets.QCheckBox()
 widgets["inhibitCRCSelector"].setChecked(True)
 widgets["inhibitCRCSelector"].setToolTip(
     "Hide CRC Failed error messages."
@@ -361,41 +362,41 @@ d0_other.addWidget(w1_other)
 
 
 w1_rotator = pg.LayoutWidget()
-widgets["rotatorHeaderLabel"] = QtGui.QLabel("<b><u>Rotator Control</u></b>")
+widgets["rotatorHeaderLabel"] = QtWidgets.QLabel("<b><u>Rotator Control</u></b>")
 
-widgets["rotatorTypeLabel"] = QtGui.QLabel("<b>Rotator Type:</b>")
-widgets["rotatorTypeSelector"] = QtGui.QComboBox()
+widgets["rotatorTypeLabel"] = QtWidgets.QLabel("<b>Rotator Type:</b>")
+widgets["rotatorTypeSelector"] = QtWidgets.QComboBox()
 widgets["rotatorTypeSelector"].addItem("rotctld")
 widgets["rotatorTypeSelector"].addItem("PSTRotator")
 
-widgets["rotatorHostLabel"] = QtGui.QLabel("<b>Rotator Hostname:</b>")
-widgets["rotatorHostEntry"] = QtGui.QLineEdit("localhost")
+widgets["rotatorHostLabel"] = QtWidgets.QLabel("<b>Rotator Hostname:</b>")
+widgets["rotatorHostEntry"] = QtWidgets.QLineEdit("localhost")
 widgets["rotatorHostEntry"].setToolTip(
     "Hostname of the rotctld or PSTRotator Server.\n"\
 )
 
-widgets["rotatorPortLabel"] = QtGui.QLabel("<b>Rotator TCP/UDP Port:</b>")
-widgets["rotatorPortEntry"] = QtGui.QLineEdit("4533")
+widgets["rotatorPortLabel"] = QtWidgets.QLabel("<b>Rotator TCP/UDP Port:</b>")
+widgets["rotatorPortEntry"] = QtWidgets.QLineEdit("4533")
 widgets["rotatorPortEntry"].setMaxLength(5)
 widgets["rotatorPortEntry"].setToolTip(
     "TCP (rotctld) or UDP (PSTRotator) port to connect to.\n"\
     "Default for rotctld: 4533\n"\
     "Default for PSTRotator: 12000"
 )
-widgets["rotatorThresholdLabel"] = QtGui.QLabel("<b>Rotator Movement Threshold:</b>")
-widgets["rotatorThresholdEntry"] = QtGui.QLineEdit("5.0")
+widgets["rotatorThresholdLabel"] = QtWidgets.QLabel("<b>Rotator Movement Threshold:</b>")
+widgets["rotatorThresholdEntry"] = QtWidgets.QLineEdit("5.0")
 widgets["rotatorThresholdEntry"].setToolTip(
     "Only move if the angle between the payload position and \n"\
     "the current rotator position is more than this, in degrees."
 )
 
-widgets["rotatorConnectButton"] = QtGui.QPushButton("Start")
+widgets["rotatorConnectButton"] = QtWidgets.QPushButton("Start")
 
-widgets["rotatorCurrentStatusLabel"] = QtGui.QLabel("<b>Status:</b>")
-widgets["rotatorCurrentStatusValue"] = QtGui.QLabel("Not Started.")
+widgets["rotatorCurrentStatusLabel"] = QtWidgets.QLabel("<b>Status:</b>")
+widgets["rotatorCurrentStatusValue"] = QtWidgets.QLabel("Not Started.")
 
-widgets["rotatorCurrentPositionLabel"] = QtGui.QLabel("<b>Commanded Az/El:</b>")
-widgets["rotatorCurrentPositionValue"] = QtGui.QLabel("---˚, --˚")
+widgets["rotatorCurrentPositionLabel"] = QtWidgets.QLabel("<b>Commanded Az/El:</b>")
+widgets["rotatorCurrentPositionValue"] = QtWidgets.QLabel("---˚, --˚")
 
 
 
@@ -429,25 +430,25 @@ widgets["spectrumPlotData"] = widgets["spectrumPlot"].plot([0])
 widgets["estimatorLines"] = [
     pg.InfiniteLine(
         pos=-1000,
-        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
+        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
         label="F1",
         labelOpts={'position':0.9}
     ),
     pg.InfiniteLine(
         pos=-1000,
-        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
+        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
         label="F2",
         labelOpts={'position':0.9}
     ),
     pg.InfiniteLine(
         pos=-1000,
-        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
+        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
         label="F3",
         labelOpts={'position':0.9}
     ),
     pg.InfiniteLine(
         pos=-1000,
-        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.DashLine),
+        pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
         label="F4",
         labelOpts={'position':0.9}
     ),
@@ -472,13 +473,13 @@ widgets["spectrumPlotRange"] = [-100, -20]
 
 w3_stats = pg.LayoutWidget()
 widgets["snrBar"] = QtWidgets.QProgressBar()
-widgets["snrBar"].setOrientation(QtCore.Qt.Vertical)
+widgets["snrBar"].setOrientation(QtCore.Qt.Orientation.Vertical)
 widgets["snrBar"].setRange(-10, 15)
 widgets["snrBar"].setValue(-10)
 widgets["snrBar"].setTextVisible(False)
-widgets["snrBar"].setAlignment(QtCore.Qt.AlignCenter)
-widgets["snrLabel"] = QtGui.QLabel("--.-")
-widgets["snrLabel"].setAlignment(QtCore.Qt.AlignCenter);
+widgets["snrBar"].setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+widgets["snrLabel"] = QtWidgets.QLabel("--.-")
+widgets["snrLabel"].setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter);
 widgets["snrLabel"].setFont(QtGui.QFont("Courier New", 14))
 w3_stats.addWidget(widgets["snrBar"], 0, 1, 1, 1)
 w3_stats.addWidget(widgets["snrLabel"], 1, 0, 1, 3)
@@ -513,14 +514,14 @@ d2_snr.addWidget(widgets["snrPlot"])
 
 # Telemetry Data
 w4_data = pg.LayoutWidget()
-widgets["latestRawSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Raw):</b>")
-widgets["latestRawSentenceData"] = QtGui.QLineEdit("NO DATA")
+widgets["latestRawSentenceLabel"] = QtWidgets.QLabel("<b>Latest Packet (Raw):</b>")
+widgets["latestRawSentenceData"] = QtWidgets.QLineEdit("NO DATA")
 widgets["latestRawSentenceData"].setReadOnly(True)
-widgets["latestDecodedSentenceLabel"] = QtGui.QLabel("<b>Latest Packet (Decoded):</b>")
-widgets["latestDecodedSentenceData"] = QtGui.QLineEdit("NO DATA")
+widgets["latestDecodedSentenceLabel"] = QtWidgets.QLabel("<b>Latest Packet (Decoded):</b>")
+widgets["latestDecodedSentenceData"] = QtWidgets.QLineEdit("NO DATA")
 widgets["latestDecodedSentenceData"].setReadOnly(True)
-widgets["latestDecodedAgeLabel"] = QtGui.QLabel("<b>Last Packet Age:</b>")
-widgets["latestDecodedAgeData"] = QtGui.QLabel("No packet yet!")
+widgets["latestDecodedAgeLabel"] = QtWidgets.QLabel("<b>Last Packet Age:</b>")
+widgets["latestDecodedAgeData"] = QtWidgets.QLabel("No packet yet!")
 w4_data.addWidget(widgets["latestRawSentenceLabel"], 0, 0, 1, 1)
 w4_data.addWidget(widgets["latestRawSentenceData"], 0, 1, 1, 6)
 w4_data.addWidget(widgets["latestDecodedSentenceLabel"], 1, 0, 1, 1)
@@ -536,30 +537,30 @@ if 'Windows' in platform.system():
 else:
     POSITION_LABEL_FONT_SIZE = 16
 
-widgets["latestPacketCallsignLabel"] = QtGui.QLabel("<b>Callsign</b>")
-widgets["latestPacketCallsignValue"] = QtGui.QLabel("---")
-widgets["latestPacketCallsignValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
-widgets["latestPacketTimeLabel"] = QtGui.QLabel("<b>Time</b>")
-widgets["latestPacketTimeValue"] = QtGui.QLabel("---")
-widgets["latestPacketTimeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
-widgets["latestPacketLatitudeLabel"] = QtGui.QLabel("<b>Latitude</b>")
-widgets["latestPacketLatitudeValue"] = QtGui.QLabel("---")
-widgets["latestPacketLatitudeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
-widgets["latestPacketLongitudeLabel"] = QtGui.QLabel("<b>Longitude</b>")
-widgets["latestPacketLongitudeValue"] = QtGui.QLabel("---")
-widgets["latestPacketLongitudeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
-widgets["latestPacketAltitudeLabel"] = QtGui.QLabel("<b>Altitude</b>")
-widgets["latestPacketAltitudeValue"] = QtGui.QLabel("---")
-widgets["latestPacketAltitudeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
-widgets["latestPacketBearingLabel"] = QtGui.QLabel("<b>Bearing</b>")
-widgets["latestPacketBearingValue"] = QtGui.QLabel("---")
-widgets["latestPacketBearingValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
-widgets["latestPacketElevationLabel"] = QtGui.QLabel("<b>Elevation</b>")
-widgets["latestPacketElevationValue"] = QtGui.QLabel("---")
-widgets["latestPacketElevationValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
-widgets["latestPacketRangeLabel"] = QtGui.QLabel("<b>Range (km)</b>")
-widgets["latestPacketRangeValue"] = QtGui.QLabel("---")
-widgets["latestPacketRangeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Bold))
+widgets["latestPacketCallsignLabel"] = QtWidgets.QLabel("<b>Callsign</b>")
+widgets["latestPacketCallsignValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketCallsignValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
+widgets["latestPacketTimeLabel"] = QtWidgets.QLabel("<b>Time</b>")
+widgets["latestPacketTimeValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketTimeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
+widgets["latestPacketLatitudeLabel"] = QtWidgets.QLabel("<b>Latitude</b>")
+widgets["latestPacketLatitudeValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketLatitudeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
+widgets["latestPacketLongitudeLabel"] = QtWidgets.QLabel("<b>Longitude</b>")
+widgets["latestPacketLongitudeValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketLongitudeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
+widgets["latestPacketAltitudeLabel"] = QtWidgets.QLabel("<b>Altitude</b>")
+widgets["latestPacketAltitudeValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketAltitudeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
+widgets["latestPacketBearingLabel"] = QtWidgets.QLabel("<b>Bearing</b>")
+widgets["latestPacketBearingValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketBearingValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
+widgets["latestPacketElevationLabel"] = QtWidgets.QLabel("<b>Elevation</b>")
+widgets["latestPacketElevationValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketElevationValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
+widgets["latestPacketRangeLabel"] = QtWidgets.QLabel("<b>Range (km)</b>")
+widgets["latestPacketRangeValue"] = QtWidgets.QLabel("---")
+widgets["latestPacketRangeValue"].setFont(QtGui.QFont("Courier New", POSITION_LABEL_FONT_SIZE, QtGui.QFont.Weight.Bold))
 
 w4_position.addWidget(widgets["latestPacketCallsignLabel"], 0, 0, 1, 2)
 w4_position.addWidget(widgets["latestPacketCallsignValue"], 1, 0, 1, 2)
@@ -1060,7 +1061,7 @@ def handle_new_packet(frame):
                 telemetry_logger.add(_decoded)
 
     # Try and force a refresh of the displays.
-    QtGui.QApplication.processEvents()
+    QtWidgets.QApplication.processEvents()
 
 
 
@@ -1264,7 +1265,7 @@ def processQueues():
             widgets['latestDecodedAgeData'].setText(f"{_time_delta_hours:02d}:{_time_delta_minutes:02d}:{_time_delta_seconds:02d}")
 
     # Try and force a re-draw.
-    QtGui.QApplication.processEvents()
+    QtWidgets.QApplication.processEvents()
 
     if not decoder_init:
         # Initialise decoders, and other libraries here.
@@ -1373,7 +1374,7 @@ logging.info("Started GUI.")
 def main():
     # Start the Qt Loop
     if (sys.flags.interactive != 1) or not hasattr(QtCore, "PYQT_VERSION"):
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec()
         save_config(widgets)
 
     try:
