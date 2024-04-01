@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['horus-gui.py'],
-             pathex=['/Users/darkside/Dev/horus-gui'],
+             pathex=['.'],
              binaries=[('../horusdemodlib/build/src/libhorus.dylib','.')],
              datas=[],
              hiddenimports=[],
@@ -38,4 +38,8 @@ coll = COLLECT(exe,
 app = BUNDLE(coll,
              name='horus-gui.app',
              icon='doc/horus_logo.icns',
-             bundle_identifier=None)
+             bundle_identifier=None,
+             info_plist={
+                'NSMicrophoneUsageDescription': 'Horus-GUI needs audio access to receive telemetry.' 
+             },
+             )
