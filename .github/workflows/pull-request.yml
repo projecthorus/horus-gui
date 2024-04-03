@@ -1,4 +1,4 @@
-name: Hello World
+name: Build
 
 on:
     push:
@@ -11,8 +11,32 @@ jobs:
         runs-on: [windows-latest]
 
         steps:
+
+        - name: Checkout horusdemodlib
+          uses: actions/checkout@v4
+          with:
+            repository: "projecthorus/horusdemodlib"
+            ref: "master"
+            path: "horusdemodlib"
+
+        - name: Build horusdemodlib
+          run: |
+            cd horusdemodlib
+            mkdir build
+            cd build
+            cmake .. -G "MinGW Makefiles"
+            mingw32-make
+
         - name: Checkout code
           uses: actions/checkout@v4
 
-        - name: Hello World
-          run: echo "Hello, World!"
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.7'
+            cache: 'pip' # caching pip dependencies
+
+        - name: Install pyAudio wheel
+          run: pip install https://download.lfd.uci.edu/pythonlibs/archived/cp37/PyAudio-0.2.11-cp37-cp37m-win_amd64.whl
+
+        - name: Install other dependencies
+          run: pip install -r requirements.txt
