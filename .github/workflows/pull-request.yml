@@ -36,7 +36,7 @@ jobs:
             cache: 'pip' # caching pip dependencies
 
         - name: Install pyAudio wheel
-          run: pip install pyAudio
+          run: pip install pyaudio
 
         - name: Install other dependencies
           run: pip install -r requirements.txt
