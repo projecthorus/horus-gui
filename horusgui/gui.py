@@ -876,11 +876,20 @@ def handle_status_update(status):
 def get_latest_snr():
     global widgets
 
-    # Assume 2 Hz stats updates, and take the peak of the last 4 seconds.
-    SNR_LEN = 2*4
+    _current_modem = widgets["horusModemSelector"].currentText()
+
+    _snr_update_rate = 2 # Hz
+
+    if "RTTY" in _current_modem:
+        # RTTY needs a much longer lookback period to find the peak SNR
+        # This is because of a very long buffer used in the RTTY demod
+        _snr_lookback = _snr_update_rate * 15
+    else:
+        # For Horus Binary we can use a smaller lookback time
+        _snr_lookback = _snr_update_rate * 4
     
-    if len(widgets["snrPlotSNR"])>SNR_LEN:
-        return np.max(widgets["snrPlotSNR"][-1*SNR_LEN:])
+    if len(widgets["snrPlotSNR"])>_snr_lookback:
+        return np.max(widgets["snrPlotSNR"][-1*_snr_lookback:])
     else:
         return np.max(widgets["snrPlotSNR"])
 
