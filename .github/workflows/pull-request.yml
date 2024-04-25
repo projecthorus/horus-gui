@@ -1,0 +1,64 @@
+name: Build
+
+on:
+    push:
+        branches: ["master"]
+    pull_request:
+        branches: ["master"]
+
+jobs:
+    build:
+        runs-on: [windows-latest]
+
+        steps:
+
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Checkout horusdemodlib
+          uses: actions/checkout@v4
+          with:
+            repository: "projecthorus/horusdemodlib"
+            ref: "master"
+            path: "horusdemodlib"
+
+        - name: Build horusdemodlib
+          run: |
+            cd horusdemodlib
+            mkdir build
+            cd build
+            cmake .. -G "MinGW Makefiles"
+            mingw32-make
+
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+            cache: 'pip' # caching pip dependencies
+
+        - name: Install pyAudio wheel
+          run: pip install pyaudio
+
+        - name: Install other dependencies
+          run: pip install -r requirements.txt
+
+        - name: Install pyinstaller
+          run: pip install pyinstaller
+
+        - name: Prep file locations
+          shell: bash
+          run: |
+            mkdir -p dist
+            cp horusdemodlib/build/src/libhorus.dll .
+            cp "C:\Program Files\Git\mingw64\bin\libgcc_s_seh-1.dll" .
+            cp "C:\Program Files\Git\mingw64\bin\libstdc++-6.dll" .
+            cp "C:\Program Files\Git\mingw64\bin\libwinpthread-1.dll" .
+
+        - name: Run pyinstaller
+          run: pyinstaller horus-gui_win.spec
+
+        - name: Upload Artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: horus-gui.zip
+            path: dist/horus-gui.exe
+            retention-days: 2
