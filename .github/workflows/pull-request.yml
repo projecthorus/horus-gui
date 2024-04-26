@@ -122,61 +122,62 @@ jobs:
             path: dist/horus-gui_OSX-M1.dmg
             retention-days: 2
 
-    build-osx-intel:
-        runs-on: [macos-13]
+    # Currently having issues with portaudio and these builds...
+    # build-osx-intel:
+    #     runs-on: [macos-13]
 
-        steps:
+    #     steps:
 
-        - name: Checkout code
-          uses: actions/checkout@v4
+    #     - name: Checkout code
+    #       uses: actions/checkout@v4
 
-        - name: Checkout horusdemodlib
-          uses: actions/checkout@v4
-          with:
-            repository: "projecthorus/horusdemodlib"
-            ref: "master"
-            path: "horusdemodlib"
+    #     - name: Checkout horusdemodlib
+    #       uses: actions/checkout@v4
+    #       with:
+    #         repository: "projecthorus/horusdemodlib"
+    #         ref: "master"
+    #         path: "horusdemodlib"
 
-        - name: Build horusdemodlib
-          run: |
-            cd horusdemodlib
-            mkdir build
-            cd build
-            cmake ..
-            make
+    #     - name: Build horusdemodlib
+    #       run: |
+    #         cd horusdemodlib
+    #         mkdir build
+    #         cd build
+    #         cmake ..
+    #         make
 
-        - uses: actions/setup-python@v5
-          with:
-            python-version: '3.11'
-            cache: 'pip' # caching pip dependencies
+    #     - uses: actions/setup-python@v5
+    #       with:
+    #         python-version: '3.11'
+    #         cache: 'pip' # caching pip dependencies
 
-        - name: Install Homebrew dependencies
-          run: brew install portaudio
+    #     - name: Install Homebrew dependencies
+    #       run: brew install portaudio
         
-        - name: Install pyAudio wheel
-          run: pip install pyaudio
+    #     - name: Install pyAudio wheel
+    #       run: pip install pyaudio
 
-        - name: Install other dependencies
-          run: pip install -r requirements.txt
+    #     - name: Install other dependencies
+    #       run: pip install -r requirements.txt
 
-        - name: Install pyinstaller
-          run: pip install pyinstaller
+    #     - name: Install pyinstaller
+    #       run: pip install pyinstaller
 
-        - name: Prep file locations
-          shell: bash
-          run: |
-            mkdir -p dist
-            cp horusdemodlib/build/src/libhorus.dylib .
+    #     - name: Prep file locations
+    #       shell: bash
+    #       run: |
+    #         mkdir -p dist
+    #         cp horusdemodlib/build/src/libhorus.dylib .
 
-        - name: Run pyinstaller
-          run: pyinstaller horus-gui_osx_runner.spec
+    #     - name: Run pyinstaller
+    #       run: pyinstaller horus-gui_osx_runner.spec
 
-        - name: Create the DMG file
-          run: hdiutil create -format UDZO -srcfolder dist/horus-gui.app dist/horus-gui_OSX-Intel.dmg
+    #     - name: Create the DMG file
+    #       run: hdiutil create -format UDZO -srcfolder dist/horus-gui.app dist/horus-gui_OSX-Intel.dmg
 
-        - name: Upload Artifact
-          uses: actions/upload-artifact@v4
-          with:
-            name: horus-gui_OSX-Intel.zip
-            path: dist/horus-gui_OSX-Intel.dmg
-            retention-days: 2
+    #     - name: Upload Artifact
+    #       uses: actions/upload-artifact@v4
+    #       with:
+    #         name: horus-gui_OSX-Intel.zip
+    #         path: dist/horus-gui_OSX-Intel.dmg
+    #         retention-days: 2
