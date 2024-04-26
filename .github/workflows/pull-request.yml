@@ -110,7 +110,7 @@ jobs:
             cp horusdemodlib/build/src/libhorus.dylib .
 
         - name: Run pyinstaller
-          run: pyinstaller horus-gui_osx.spec
+          run: pyinstaller horus-gui_osx_runner.spec
 
         - name: Upload Artifact
           uses: actions/upload-artifact@v4
