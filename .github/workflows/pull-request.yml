@@ -91,6 +91,9 @@ jobs:
             python-version: '3.11'
             cache: 'pip' # caching pip dependencies
 
+        - name: Install Homebrew dependencies
+          run: brew install portaudio
+        
         - name: Install pyAudio wheel
           run: pip install pyaudio
 
