@@ -112,9 +112,12 @@ jobs:
         - name: Run pyinstaller
           run: pyinstaller horus-gui_osx_runner.spec
 
+        - name: Create the DMG file
+          run: hdiutil create -format UDZO -srcfolder dist/horus-gui.app dist/horus-gui_OSX-M1.dmg
+
         - name: Upload Artifact
           uses: actions/upload-artifact@v4
           with:
-            name: horus-gui_OSX-M1.zip
-            path: dist/horus-gui.app
+            name: horus-gui_OSX-M1
+            path: dist/horus-gui_OSX-M1.dmg
             retention-days: 2
