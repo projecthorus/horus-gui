@@ -733,7 +733,7 @@ widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
 
 # Update uploader info as soon as it's edited, to ensure we upload with the latest user callsign
 def update_uploader_details():
-    habitat_position_reupload(upload=False)
+    habitat_position_reupload("Dummy Arg!", upload=False)
 
 widgets["userCallEntry"].textEdited.connect(update_uploader_details)
 
