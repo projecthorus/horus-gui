@@ -87,6 +87,7 @@ parser = argparse.ArgumentParser(description="Project Horus GUI", formatter_clas
 parser.add_argument("--payload-id-list", type=str, default=None, help="Use supplied Payload ID List instead of downloading a new one.")
 parser.add_argument("--custom-field-list", type=str, default=None, help="Use supplied Custom Field List instead of downloading a new one.")
 parser.add_argument("--libfix", action="store_true", default=False, help="Search for libhorus.dll/so in ./ instead of on the path.")
+parser.add_argument("--reset", action="store_true", default=False, help="Reset all configuration information on startup.")
 parser.add_argument("-v", "--verbose", action="store_true", default=False, help="Verbose output (set logging level to DEBUG)")
 args = parser.parse_args()
 
@@ -229,7 +230,7 @@ widgets["userCallEntry"].setToolTip(
     "Your station callsign, which doesn't necessarily need to be an\n"\
     "amateur radio callsign, just something unique!"
 )
-widgets["userLocationLabel"] = QtWidgets.QLabel("<b>Lat/Lon:</b>")
+widgets["userLocationLabel"] = QtWidgets.QLabel("<b>Latitude / Longitude:</b>")
 widgets["userLatEntry"] = QtWidgets.QLineEdit("0.0")
 widgets["userLatEntry"].setToolTip("Station Latitude in Decimal Degrees, e.g. -34.123456")
 widgets["userLonEntry"] = QtWidgets.QLineEdit("0.0")
@@ -244,13 +245,12 @@ widgets["userRadioLabel"] = QtWidgets.QLabel("<b>Radio:</b>")
 widgets["userRadioEntry"] = QtWidgets.QLineEdit("Horus-GUI " + __version__)
 widgets["userRadioEntry"].setToolTip(
     "A text description of your station's radio setup.\n"\
-    "This field will be automatically prefixed with Horus-GUI."
+    "This field will be automatically prefixed with Horus-GUI\n"\
+    "and the Horus-GUI software version."
 )
-widgets["habitatUploadPosition"] = QtWidgets.QPushButton("Re-upload Position")
+widgets["habitatUploadPosition"] = QtWidgets.QPushButton("Re-upload Station Info")
 widgets["habitatUploadPosition"].setToolTip(
-    "Manually re-upload your position information to SondeHub-Amateur.\n"\
-    "Note that it can take a few minutes for your new information to\n"\
-    "appear on the map."
+    "Manually re-upload your station information to SondeHub-Amateur.\n"\
 )
 widgets["dialFreqLabel"] = QtWidgets.QLabel("<b>Radio Dial Freq (MHz):</b>")
 widgets["dialFreqEntry"] = QtWidgets.QLineEdit("")
@@ -258,6 +258,7 @@ widgets["dialFreqEntry"].setToolTip(
     "Optional entry of your radio's dial frequency in MHz (e.g. 437.600).\n"\
     "Used to provide frequency information on SondeHub-Amateur."\
 )
+widgets["sondehubPositionNotesLabel"] = QtWidgets.QLabel("")
 
 widgets["saveSettingsButton"] = QtWidgets.QPushButton("Save Settings")
 
@@ -277,8 +278,9 @@ w1_habitat.addWidget(widgets["userRadioEntry"], 5, 1, 1, 2)
 w1_habitat.addWidget(widgets["dialFreqLabel"], 6, 0, 1, 1)
 w1_habitat.addWidget(widgets["dialFreqEntry"], 6, 1, 1, 2)
 w1_habitat.addWidget(widgets["habitatUploadPosition"], 7, 0, 1, 3)
-w1_habitat.layout.setRowStretch(8, 1)
-w1_habitat.addWidget(widgets["saveSettingsButton"], 9, 0, 1, 3)
+w1_habitat.addWidget(widgets["sondehubPositionNotesLabel"], 8, 0, 1, 3)
+w1_habitat.layout.setRowStretch(9, 1)
+w1_habitat.addWidget(widgets["saveSettingsButton"], 10, 0, 1, 3)
 
 d0_habitat.addWidget(w1_habitat)
 
@@ -679,8 +681,12 @@ def set_logging_format():
 
 widgets["loggingFormatSelector"].currentIndexChanged.connect(set_logging_format)
 
-# Read in configuration file settings
-read_config(widgets)
+# Clear the configuration if we have been asked to, otherwise read it in from Qt stores
+if args.reset:
+    logging.info("Clearing configuration.")
+    write_config()
+else:
+    read_config(widgets)
 
 
 try:
@@ -708,9 +714,12 @@ telemetry_logger = TelemetryLogger(
 )
 
 # Handlers for various checkboxes and push-buttons
-
 def habitat_position_reupload(dummy_arg, upload=True):
-    """ Trigger a re-upload of user position information """
+    """ 
+    Trigger a re-upload of user position information 
+    Note that this requires a dummy argument, as the Qt 
+    'connect' callback supplies an argument which we don't want.
+    """
     global widgets, sondehub_uploader
 
     sondehub_uploader.user_callsign = widgets["userCallEntry"].text()
@@ -720,22 +729,39 @@ def habitat_position_reupload(dummy_arg, upload=True):
         if float(widgets["userLatEntry"].text()) == 0.0 and float(widgets["userLonEntry"].text()) == 0.0:
             sondehub_uploader.user_position = None
         else:
-            sondehub_uploader.user_position = [float(widgets["userLatEntry"].text()), float(widgets["userLonEntry"].text()), 0.0]
-    except:
+            sondehub_uploader.user_position = [
+                float(widgets["userLatEntry"].text()), 
+                float(widgets["userLonEntry"].text()), 
+                float(widgets["userAltEntry"].text())]
+    except Exception as e:
+        logging.error(f"Error parsing station location - {str(e)}")
         sondehub_uploader.user_position = None
 
     if upload:
         sondehub_uploader.last_user_position_upload = 0
+        widgets["sondehubPositionNotesLabel"].setText("")
         logging.info("Triggered user position re-upload.")
 
+# Connect the 'Re-upload Position' button to the above function.
 widgets["habitatUploadPosition"].clicked.connect(habitat_position_reupload)
 
 
 # Update uploader info as soon as it's edited, to ensure we upload with the latest user callsign
 def update_uploader_details():
-    habitat_position_reupload(upload=False)
+    """
+    Wrapper function for position re-upload, called when the user callsign entry is changed.
+    """
+    #habitat_position_reupload("unused arg",upload=False)
+    widgets["sondehubPositionNotesLabel"].setText("<center><b>Station Info out of date - click Re-Upload!</b></center>")
 
+# Connect all the station information fields to this function, so that when the user
+# changes any of them they get a prompt to click the re-upload button.
 widgets["userCallEntry"].textEdited.connect(update_uploader_details)
+widgets["userRadioEntry"].textEdited.connect(update_uploader_details)
+widgets["userAntennaEntry"].textEdited.connect(update_uploader_details)
+widgets["userLatEntry"].textEdited.connect(update_uploader_details)
+widgets["userLonEntry"].textEdited.connect(update_uploader_details)
+widgets["userAltEntry"].textEdited.connect(update_uploader_details)
 
 
 def habitat_inhibit():
