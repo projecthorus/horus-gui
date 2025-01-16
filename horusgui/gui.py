@@ -985,20 +985,18 @@ class MainWindow(QMainWindow):
             return np.max(self.widgets["snrPlotSNR"])
 
 
-    def add_fft_update(data):
+    def add_fft_update(self, data):
         """ Try and insert a new set of FFT data into the update queue """
-        global fft_update_queue
         try:
-            fft_update_queue.put_nowait(data)
+            self.fft_update_queue.put_nowait(data)
         except:
             logging.error("FFT Update Queue Full!")
 
 
-    def add_stats_update(frame):
+    def add_stats_update(self, frame):
         """ Try and insert modem statistics into the processing queue """
-        global status_update_queue
         try:
-            status_update_queue.put_nowait(frame)
+            self.status_update_queue.put_nowait(frame)
         except:
             logging.error("Status Update Queue Full!")
         
