@@ -3,6 +3,7 @@ name: Build
 on:
     push:
         branches: ["master"]
+        branches: ["pyqt6"]
     pull_request:
         branches: ["master"]
 
