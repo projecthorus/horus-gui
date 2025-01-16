@@ -1,7 +1,8 @@
 numpy
 pyaudio
 crcmod
-PyQt5
+PyQt6
 pyqtgraph
 requests
 horusdemodlib>=0.3.12
+audioop-lts; python_version>='3.13'
