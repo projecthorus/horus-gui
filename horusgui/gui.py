@@ -156,47 +156,28 @@ class MainWindow(QMainWindow):
         #   GUI Creation - The Bad way.
         #
 
-        # Create a Qt App.
-        pg.mkQApp()
-
         # GUI LAYOUT - Gtk Style!
-        area = DockArea()
-        self.setCentralWidget(area)
         self.setWindowTitle(f"Horus Telemetry GUI - v{__version__}")
         self.setWindowIcon(getHorusIcon())
 
-        # Create multiple dock areas, for displaying our data.
-        d0 = Dock("Audio", size=(300, 50))
-        d0_modem = Dock("Modem", size=(300, 80))
-        d0_habitat = Dock("SondeHub", size=(300, 200))
-        d0_other = Dock("Other", size=(300, 100))
-        d0_rotator = Dock("Rotator", size=(300, 100))
-        d1 = Dock("Spectrum", size=(800, 350))
-        d2_stats = Dock("SNR (dB)", size=(50, 300))
-        d2_snr = Dock("SNR Plot", size=(750, 300))
-        d3_data = Dock("Data", size=(800, 50))
-        d3_position = Dock("Position", size=(800, 50))
-        d4 = Dock("Log", size=(800, 150))
-        # Arrange docks.
-        area.addDock(d0)
-        area.addDock(d1, "right", d0)
-        area.addDock(d0_modem, "bottom", d0)
-        area.addDock(d0_habitat, "bottom", d0_modem)
-        area.addDock(d0_other, "below", d0_habitat)
-        area.addDock(d0_rotator, "below", d0_other)
-        area.addDock(d2_stats, "bottom", d1)
-        area.addDock(d3_data, "bottom", d2_stats)
-        area.addDock(d3_position, "bottom", d3_data)
-        area.addDock(d4, "bottom", d3_position)
-        area.addDock(d2_snr, "right", d2_stats)
-        d0_habitat.raiseDock()
+        self.mainWidget = QWidget()
+        self.setCentralWidget(self.mainWidget)
+        self.mainLayout = QGridLayout()
+        self.mainWidget.setLayout(self.mainLayout)
 
+        # Left Column VBox
+        left_column = QGridLayout()
 
         # Controls
-        w1_audio = pg.LayoutWidget()
-        # TNC Connection
+        w1_audio_groupbox = QGroupBox('Audio')
+        w1_audio_groupbox.setObjectName("b1")
+        w1_audio_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w1_audio = QGridLayout(w1_audio_groupbox)
+
+        # Audio Parameters
         self.widgets["audioDeviceLabel"] = QLabel("<b>Audio Device:</b>")
         self.widgets["audioDeviceSelector"] = QComboBox()
+        self.widgets["audioDeviceSelector"].setFixedWidth(300) # Dirty, but it needed to be done
         self.widgets["audioDeviceSelector"].currentIndexChanged.connect(self.update_audio_sample_rates)
 
         self.widgets["audioSampleRateLabel"] = QLabel("<b>Sample Rate (Hz):</b>")
@@ -212,12 +193,14 @@ class MainWindow(QMainWindow):
         w1_audio.addWidget(self.widgets["audioSampleRateSelector"], 1, 1, 1, 2)
         w1_audio.addWidget(self.widgets["audioDbfsLabel"], 2, 0, 1, 1)
         w1_audio.addWidget(self.widgets["audioDbfsValue"], 2, 1, 1, 2)
-        d0.addWidget(w1_audio)
-
-        w1_modem = pg.LayoutWidget()
-
+        w1_audio_groupbox.setLayout(w1_audio)
 
         # Modem Parameters
+        w1_modem_groupbox = QGroupBox('Modem')
+        w1_modem_groupbox.setObjectName("b1")
+        w1_modem_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w1_modem = QGridLayout(w1_modem_groupbox)
+
         self.widgets["horusModemLabel"] = QLabel("<b>Mode:</b>")
         self.widgets["horusModemSelector"] = QComboBox()
         self.widgets["horusModemSelector"].currentIndexChanged.connect(self.update_modem_settings)
@@ -267,11 +250,13 @@ class MainWindow(QMainWindow):
         w1_modem.addWidget(self.widgets["horusManualEstimatorLabel"], 4, 0, 1, 1)
         w1_modem.addWidget(self.widgets["horusManualEstimatorSelector"], 4, 1, 1, 1)
         w1_modem.addWidget(self.widgets["startDecodeButton"], 5, 0, 2, 2)
+        for i in range(w1_modem.columnCount()):
+            w1_modem.setColumnStretch(i, 1)
+        w1_modem_groupbox.setLayout(w1_modem)
 
-        d0_modem.addWidget(w1_modem)
 
-
-        w1_habitat = pg.LayoutWidget()
+        w1_habitat_groupbox = QGroupBox('SondeHub')
+        w1_habitat = QGridLayout(w1_habitat_groupbox)
         # Listener Information
         self.widgets["habitatHeading"] = QLabel("<b>SondeHub Settings</b>")
         self.widgets["sondehubUploadLabel"] = QLabel("<b>Enable SondeHub-Ham Upload:</b>")
@@ -343,12 +328,14 @@ class MainWindow(QMainWindow):
         w1_habitat.addWidget(self.widgets["dialFreqEntry"], 6, 1, 1, 2)
         w1_habitat.addWidget(self.widgets["habitatUploadPosition"], 7, 0, 1, 3)
         w1_habitat.addWidget(self.widgets["sondehubPositionNotesLabel"], 8, 0, 1, 3)
-        w1_habitat.layout.setRowStretch(9, 1)
+        w1_habitat.setRowStretch(9, 1) 
         w1_habitat.addWidget(self.widgets["saveSettingsButton"], 10, 0, 1, 3)
+        for i in range(w1_habitat.columnCount()):
+            w1_habitat.setColumnStretch(i, 1)
+        w1_habitat_groupbox.setLayout(w1_habitat)
 
-        d0_habitat.addWidget(w1_habitat)
-
-        w1_other = pg.LayoutWidget()
+        w1_other_groupbox = QGroupBox("Other")
+        w1_other = QGridLayout(w1_other_groupbox)
         self.widgets["horusHeaderLabel"] = QLabel("<b><u>Telemetry Forwarding</u></b>")
         self.widgets["horusUploadLabel"] = QLabel("<b>Enable Horus UDP Output:</b>")
         self.widgets["horusUploadSelector"] = QCheckBox()
@@ -425,12 +412,14 @@ class MainWindow(QMainWindow):
         w1_other.addWidget(self.widgets["otherHeaderLabel"], 10, 0, 1, 2)
         w1_other.addWidget(self.widgets["inhibitCRCLabel"], 11, 0, 1, 1)
         w1_other.addWidget(self.widgets["inhibitCRCSelector"], 11, 1, 1, 1)
-        w1_other.layout.setRowStretch(12, 1)
+        w1_other.setRowStretch(12, 1)
+        for i in range(w1_other.columnCount()):
+            w1_other.setColumnStretch(i, 1)
+        w1_other_groupbox.setLayout(w1_other)
 
-        d0_other.addWidget(w1_other)
 
-
-        w1_rotator = pg.LayoutWidget()
+        w1_rotator_groupbox = QGroupBox("Rotator")
+        w1_rotator = QGridLayout(w1_rotator_groupbox)
         self.widgets["rotatorHeaderLabel"] = QLabel("<b><u>Rotator Control</u></b>")
 
         self.widgets["rotatorTypeLabel"] = QLabel("<b>Rotator Type:</b>")
@@ -484,11 +473,28 @@ class MainWindow(QMainWindow):
         w1_rotator.addWidget(self.widgets["rotatorCurrentStatusValue"], 5, 1, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorCurrentPositionLabel"], 6, 0, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorCurrentPositionValue"], 6, 1, 1, 1)
+        w1_rotator.setRowStretch(7, 1)
+        for i in range(w1_rotator.columnCount()):
+            w1_rotator.setColumnStretch(i, 1)
 
-        w1_rotator.layout.setRowStretch(7, 1)
+        w1_rotator_groupbox.setLayout(w1_rotator)
 
-        d0_rotator.addWidget(w1_rotator)
+        w1_tab_widget = QTabWidget()
+        w1_tab_widget.setTabPosition(QTabWidget.TabPosition.North)
+        w1_tab_widget.tabBar().setExpanding(True)
+        w1_tab_widget.addTab(w1_habitat_groupbox, "SondeHub")
+        w1_tab_widget.addTab(w1_other_groupbox, "Other")
+        w1_tab_widget.addTab(w1_rotator_groupbox, "Rotator")
+        w1_tab_widget.setStyleSheet("QTabBar {font: bold 14px;}")
 
+        # Add widgets to left column
+        left_column.addWidget(w1_audio_groupbox, 0, 0, 1, 1)
+        left_column.addWidget(w1_modem_groupbox, 1, 0, 1, 1)
+        left_column.addWidget(w1_tab_widget, 2, 0, 1, 1)
+        # left_column.maximumSize(QSize.setWidth(225))
+
+        # Right Column QGrid (Grid for merged cells)
+        right_column = QGridLayout()
 
         # Spectrum Display
         self.widgets["spectrumPlot"] = pg.PlotWidget(title="Spectra")
@@ -537,12 +543,18 @@ class MainWindow(QMainWindow):
         self.widgets["estimatorRange"].setBounds([100,4000])
         self.widgets["estimatorRange"].sigRegionChangeFinished.connect(self.update_manual_estimator)
 
-        d1.addWidget(self.widgets["spectrumPlot"])
+        w2_spectrum_groupbox = QGroupBox("Spectrum")
+        w2_spectrum_groupbox.setObjectName("b1")
+        w2_spectrum_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        spectrum = QGridLayout(w2_spectrum_groupbox)
+        spectrum.addWidget(self.widgets["spectrumPlot"])
 
         self.widgets["spectrumPlotRange"] = [-100, -20]
 
-
-        w3_stats = pg.LayoutWidget()
+        w3_stats_groupbox = QGroupBox("SNR (dB)")
+        w3_stats_groupbox.setObjectName("b1")
+        w3_stats_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w3_stats = QGridLayout(w3_stats_groupbox)
         self.widgets["snrBar"] = QProgressBar()
         self.widgets["snrBar"].setOrientation(QtCore.Qt.Orientation.Vertical)
         self.widgets["snrBar"].setRange(-10, 15)
@@ -554,13 +566,17 @@ class MainWindow(QMainWindow):
         self.widgets["snrLabel"].setFont(QFont("Courier New", 14))
         w3_stats.addWidget(self.widgets["snrBar"], 0, 1, 1, 1)
         w3_stats.addWidget(self.widgets["snrLabel"], 1, 0, 1, 3)
-        w3_stats.layout.setColumnStretch(0, 2)
-        w3_stats.layout.setColumnStretch(2, 2)
+        w3_stats.setColumnStretch(0, 2)
+        w3_stats.setColumnStretch(2, 2)
 
-        d2_stats.addWidget(w3_stats)
+        w3_stats_groupbox.setLayout(w3_stats)
+
 
         # SNR Plot
-        w3_snr = pg.LayoutWidget()
+        w3_snr_groupbox = QGroupBox("SNR Plot")
+        w3_snr_groupbox.setObjectName("b1")
+        w3_snr_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w3_snr = QGridLayout(w3_snr_groupbox)
         self.widgets["snrPlot"] = pg.PlotWidget(title="SNR")
         self.widgets["snrPlot"].setLabel("left", "SNR (dB)")
         self.widgets["snrPlot"].setLabel("bottom", "Time (s)")
@@ -572,6 +588,9 @@ class MainWindow(QMainWindow):
         self.widgets["snrPlotTime"] = np.array([])
         self.widgets["snrPlotSNR"] = np.array([])
         self.widgets["snrPlotData"] = self.widgets["snrPlot"].plot(self.widgets["snrPlotTime"], self.widgets["snrPlotSNR"])
+        w3_snr.addWidget(self.widgets["snrPlot"])
+
+        w3_snr_groupbox.setLayout(w3_snr)
 
         # TODO: Look into eye diagram more
         # self.widgets["eyeDiagramPlot"] = pg.PlotWidget(title="Eye Diagram")
@@ -581,10 +600,11 @@ class MainWindow(QMainWindow):
 
         #w3.addWidget(self.widgets["eyeDiagramPlot"], 0, 1)
 
-        d2_snr.addWidget(self.widgets["snrPlot"])
-
         # Telemetry Data
-        w4_data = pg.LayoutWidget()
+        w4_data_groupbox = QGroupBox("Data")
+        w4_data_groupbox.setObjectName("b1")
+        w4_data_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w4_data = QGridLayout(w4_data_groupbox)
         self.widgets["latestRawSentenceLabel"] = QLabel("<b>Latest Packet (Raw):</b>")
         self.widgets["latestRawSentenceData"] = QLineEdit("NO DATA")
         self.widgets["latestRawSentenceData"].setReadOnly(True)
@@ -599,9 +619,13 @@ class MainWindow(QMainWindow):
         w4_data.addWidget(self.widgets["latestDecodedSentenceData"], 1, 1, 1, 6)
         w4_data.addWidget(self.widgets["latestDecodedAgeLabel"], 2, 0, 1, 1)
         w4_data.addWidget(self.widgets["latestDecodedAgeData"], 2, 1, 1, 2)
-        d3_data.addWidget(w4_data)
 
-        w4_position = pg.LayoutWidget()
+        w4_data_groupbox.setLayout(w4_data)
+
+        w4_position_groupbox = QGroupBox("Position")
+        w4_position_groupbox.setObjectName("b1")
+        w4_position_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w4_position = QGridLayout(w4_position_groupbox)
         # This font seems to look bigger in Windows... not sure why.
         if 'Windows' in platform.system():
             POSITION_LABEL_FONT_SIZE = 14
@@ -649,14 +673,41 @@ class MainWindow(QMainWindow):
         w4_position.addWidget(self.widgets["latestPacketElevationValue"], 1, 8, 1, 1)
         w4_position.addWidget(self.widgets["latestPacketRangeLabel"], 0, 9, 1, 1)
         w4_position.addWidget(self.widgets["latestPacketRangeValue"], 1, 9, 1, 1)
-        w4_position.layout.setRowStretch(1, 6)
-        d3_position.addWidget(w4_position)
+        w4_position.setRowStretch(1, 6)
 
-        w5 = pg.LayoutWidget()
+        w4_position_groupbox.setLayout(w4_position)
+
+        w5_groupbox = QGroupBox("Log")
+        w5_groupbox.setObjectName("b1")
+        w5_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w5 = QGridLayout(w5_groupbox)
         self.widgets["console"] = QPlainTextEdit()
         self.widgets["console"].setReadOnly(True)
         w5.addWidget(self.widgets["console"])
-        d4.addWidget(w5)
+        
+        w5_groupbox.setLayout(w5)
+
+        right_column.addWidget(w2_spectrum_groupbox, 0, 0, 1, 2)
+        right_column.addWidget(w3_stats_groupbox, 1, 0, 1, 1)
+        right_column.addWidget(w3_snr_groupbox, 1, 1, 1, 1)
+        right_column.addWidget(w4_data_groupbox, 2, 0, 1, 2)
+        right_column.addWidget(w4_position_groupbox, 3, 0, 1, 2)
+        right_column.addWidget(w5_groupbox, 4, 0, 1, 2)
+
+        right_column.setColumnStretch(0, 1)
+        right_column.setColumnStretch(1, 9)
+
+        self.mainLayout.addLayout(left_column, 0, 0, 1, 1)
+        self.mainLayout.addLayout(right_column, 0, 1, 1, 1)
+
+        # Grid: (Row, Column, RowSpan, ColumnSpan)
+        # self.mainLayout.setVerticalSpacing(4)
+        # self.mainLayout.addWidget(self.titleLabel, 0, 0, 1, 1)
+        # self.mainLayout.addWidget(self.tabWidget, 1, 0, 1, 1)
+        # self.mainLayout.addLayout(self.rightLayout, 1, 1, 1, 1)
+        # self.mainLayout.setContentsMargins(0, 25, 25, 25)
+        self.mainLayout.setColumnStretch(0, 0)
+        self.mainLayout.setColumnStretch(1, 10)
 
         # Resize window to final resolution, and display.
         logging.info("Starting GUI.")
