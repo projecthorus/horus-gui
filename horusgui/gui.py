@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 from pyqtgraph.dockarea import *
-import qdarktheme
+# import qdarktheme
 from threading import Thread
 
 from .widgets import *
@@ -1443,7 +1443,7 @@ class ConsoleHandler(logging.Handler):
 # Main
 def main():
     app = QApplication(sys.argv)
-    app.setStyleSheet(qdarktheme.load_stylesheet())
+    # app.setStyleSheet(qdarktheme.load_stylesheet())
     window = MainWindow()
     app.aboutToQuit.connect(window.cleanup)
     window.show()
