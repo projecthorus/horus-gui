@@ -65,6 +65,12 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s: %(message)s", level=_log_level
 )
 
+# This font seems to look bigger in Windows... not sure why.
+if 'Windows' in platform.system():
+    POSITION_LABEL_FONT_SIZE = 14
+else:
+    POSITION_LABEL_FONT_SIZE = 16
+
 # Establish signals and worker for multi-threaded use
 class WorkerSignals(QObject):
     finished = pyqtSignal()
@@ -166,7 +172,7 @@ class MainWindow(QMainWindow):
         self.mainWidget.setLayout(self.mainLayout)
 
         # Left Column VBox
-        left_column = QGridLayout()
+        left_column = QVBoxLayout()
 
         # Controls
         w1_audio_groupbox = QGroupBox('Audio')
@@ -250,8 +256,6 @@ class MainWindow(QMainWindow):
         w1_modem.addWidget(self.widgets["horusManualEstimatorLabel"], 4, 0, 1, 1)
         w1_modem.addWidget(self.widgets["horusManualEstimatorSelector"], 4, 1, 1, 1)
         w1_modem.addWidget(self.widgets["startDecodeButton"], 5, 0, 2, 2)
-        for i in range(w1_modem.columnCount()):
-            w1_modem.setColumnStretch(i, 1)
         w1_modem_groupbox.setLayout(w1_modem)
 
 
@@ -330,8 +334,6 @@ class MainWindow(QMainWindow):
         w1_habitat.addWidget(self.widgets["sondehubPositionNotesLabel"], 8, 0, 1, 3)
         w1_habitat.setRowStretch(9, 1) 
         w1_habitat.addWidget(self.widgets["saveSettingsButton"], 10, 0, 1, 3)
-        for i in range(w1_habitat.columnCount()):
-            w1_habitat.setColumnStretch(i, 1)
         w1_habitat_groupbox.setLayout(w1_habitat)
 
         w1_other_groupbox = QGroupBox("Other")
@@ -413,8 +415,6 @@ class MainWindow(QMainWindow):
         w1_other.addWidget(self.widgets["inhibitCRCLabel"], 11, 0, 1, 1)
         w1_other.addWidget(self.widgets["inhibitCRCSelector"], 11, 1, 1, 1)
         w1_other.setRowStretch(12, 1)
-        for i in range(w1_other.columnCount()):
-            w1_other.setColumnStretch(i, 1)
         w1_other_groupbox.setLayout(w1_other)
 
 
@@ -474,8 +474,6 @@ class MainWindow(QMainWindow):
         w1_rotator.addWidget(self.widgets["rotatorCurrentPositionLabel"], 6, 0, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorCurrentPositionValue"], 6, 1, 1, 1)
         w1_rotator.setRowStretch(7, 1)
-        for i in range(w1_rotator.columnCount()):
-            w1_rotator.setColumnStretch(i, 1)
 
         w1_rotator_groupbox.setLayout(w1_rotator)
 
@@ -488,9 +486,17 @@ class MainWindow(QMainWindow):
         w1_tab_widget.setStyleSheet("QTabBar {font: bold 14px;}")
 
         # Add widgets to left column
-        left_column.addWidget(w1_audio_groupbox, 0, 0, 1, 1)
-        left_column.addWidget(w1_modem_groupbox, 1, 0, 1, 1)
-        left_column.addWidget(w1_tab_widget, 2, 0, 1, 1)
+        # w1_audio_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
+        # w1_modem_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
+        # w1_tab_widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
+        # w1_habitat_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
+        # w1_other_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
+        # w1_rotator_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
+
+        left_column.addWidget(w1_audio_groupbox) #, 0, 0, 1, 1)
+        left_column.addWidget(w1_modem_groupbox) #, 1, 0, 1, 1)
+        left_column.addWidget(w1_tab_widget) #, 2, 0, 1, 1)
+        #left_column.
         # left_column.maximumSize(QSize.setWidth(225))
 
         # Right Column QGrid (Grid for merged cells)
@@ -626,11 +632,6 @@ class MainWindow(QMainWindow):
         w4_position_groupbox.setObjectName("b1")
         w4_position_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
         w4_position = QGridLayout(w4_position_groupbox)
-        # This font seems to look bigger in Windows... not sure why.
-        if 'Windows' in platform.system():
-            POSITION_LABEL_FONT_SIZE = 14
-        else:
-            POSITION_LABEL_FONT_SIZE = 16
 
         self.widgets["latestPacketCallsignLabel"] = QLabel("<b>Callsign</b>")
         self.widgets["latestPacketCallsignValue"] = QLabel("---")
@@ -677,25 +678,87 @@ class MainWindow(QMainWindow):
 
         w4_position_groupbox.setLayout(w4_position)
 
-        w5_groupbox = QGroupBox("Log")
-        w5_groupbox.setObjectName("b1")
-        w5_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
-        w5 = QGridLayout(w5_groupbox)
+        w5_telemetry_groupbox = QGroupBox("Telemetry")
+        w5_telemetry_groupbox.setObjectName("b1")
+        w5_telemetry_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        self.w5_telemetry = QGridLayout(w5_telemetry_groupbox)
+        w5_telemetry_groupbox.setLayout(self.w5_telemetry)
+
+        # These are placeholders and will be updated when telemetry is received. 
+        self.widgets["latestTelem0Label"] = QLabel("<b>Battery Voltage</b>")
+        self.widgets["latestTelem0Value"] = QLabel("---")
+        self.widgets["latestTelem0Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem1Label"] = QLabel("<b>External Temperature</b>")
+        self.widgets["latestTelem1Value"] = QLabel("---")
+        self.widgets["latestTelem1Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem2Label"] = QLabel("<b>External Humidity</b>")
+        self.widgets["latestTelem2Value"] = QLabel("---")
+        self.widgets["latestTelem2Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem3Label"] = QLabel("<b>External Pressure</b>")
+        self.widgets["latestTelem3Value"] = QLabel("---")
+        self.widgets["latestTelem3Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem4Label"] = QLabel()
+        self.widgets["latestTelem4Value"] = QLabel()
+        self.widgets["latestTelem4Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem5Label"] = QLabel()
+        self.widgets["latestTelem5Value"] = QLabel()
+        self.widgets["latestTelem5Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem6Label"] = QLabel()
+        self.widgets["latestTelem6Value"] = QLabel()
+        self.widgets["latestTelem6Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem7Label"] = QLabel()
+        self.widgets["latestTelem7Value"] = QLabel()
+        self.widgets["latestTelem7Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelem8Label"] = QLabel()
+        self.widgets["latestTelem8Value"] = QLabel()
+        self.widgets["latestTelem8Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+
+        self.w5_telemetry.addWidget(self.widgets["latestTelem0Label"], 0, 0, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem0Value"], 1, 0, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem1Label"], 0, 1, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem1Value"], 1, 1, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem2Label"], 0, 2, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem2Value"], 1, 2, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem3Label"], 0, 3, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem3Value"], 1, 3, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem4Label"], 0, 4, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem4Value"], 1, 4, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem5Label"], 0, 5, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem5Value"], 1, 5, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem6Label"], 0, 6, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem6Value"], 1, 6, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem7Label"], 0, 7, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem7Value"], 1, 7, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem8Label"], 0, 8, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets["latestTelem8Value"], 1, 8, 1, 1)
+        self.w5_telemetry.setRowStretch(1, 6)
+
+        w6_groupbox = QGroupBox("Log")
+        w6_groupbox.setObjectName("b1")
+        w6_groupbox.setStyleSheet('QWidget#b1 { font-size: 15px; font-weight: bold}')
+        w6 = QGridLayout(w6_groupbox)
         self.widgets["console"] = QPlainTextEdit()
         self.widgets["console"].setReadOnly(True)
-        w5.addWidget(self.widgets["console"])
+        w6.addWidget(self.widgets["console"])
         
-        w5_groupbox.setLayout(w5)
+        w6_groupbox.setLayout(w6)
 
-        right_column.addWidget(w2_spectrum_groupbox, 0, 0, 1, 2)
-        right_column.addWidget(w3_stats_groupbox, 1, 0, 1, 1)
-        right_column.addWidget(w3_snr_groupbox, 1, 1, 1, 1)
-        right_column.addWidget(w4_data_groupbox, 2, 0, 1, 2)
-        right_column.addWidget(w4_position_groupbox, 3, 0, 1, 2)
-        right_column.addWidget(w5_groupbox, 4, 0, 1, 2)
+        right_column.addWidget(w2_spectrum_groupbox, 0, 0, 1, 1)
+        right_column.addWidget(w3_snr_groupbox, 0, 1, 1, 1)
+        right_column.addWidget(w3_stats_groupbox, 0, 2, 1, 1)
+        right_column.addWidget(w4_data_groupbox, 1, 0, 1, 3)
+        right_column.addWidget(w4_position_groupbox, 2, 0, 1, 3)
+        right_column.addWidget(w5_telemetry_groupbox, 3, 0, 1, 3)
+        right_column.addWidget(w6_groupbox, 4, 0, 1, 3)
 
-        right_column.setColumnStretch(0, 1)
-        right_column.setColumnStretch(1, 9)
+        right_column.setColumnStretch(0, 10)
+        right_column.setColumnStretch(1, 6)
+        right_column.setColumnStretch(2, 1)
+
+        # right_column.setRowStretch(0, 5)
+        # right_column.setRowStretch(1, 3)
+        # right_column.setRowStretch(2, 3)
+        # right_column.setRowStretch(3, 3)
 
         self.mainLayout.addLayout(left_column, 0, 0, 1, 1)
         self.mainLayout.addLayout(right_column, 0, 1, 1, 1)
@@ -707,11 +770,11 @@ class MainWindow(QMainWindow):
         # self.mainLayout.addLayout(self.rightLayout, 1, 1, 1, 1)
         # self.mainLayout.setContentsMargins(0, 25, 25, 25)
         self.mainLayout.setColumnStretch(0, 0)
-        self.mainLayout.setColumnStretch(1, 10)
+        self.mainLayout.setColumnStretch(1, 1)
 
         # Resize window to final resolution, and display.
         logging.info("Starting GUI.")
-        self.resize(1500, 800)
+        self.resize(1500, self.minimumSize().height())
 
         self.post_initialize()
 
@@ -1136,7 +1199,7 @@ class MainWindow(QMainWindow):
 
                     self.widgets["latestRawSentenceData"].setText(f"{_packet} ({_snr:.1f} dB SNR)")
                     self.widgets["latestDecodedSentenceData"].setText(_decoded['ukhas_str'])
-                    last_packet_time = time.time()
+                    self.last_packet_time = time.time()
                     # Upload the string to Sondehub Amateur
                     if self.widgets["userCallEntry"].text() == "N0CALL":
                         logging.warning("Uploader callsign is set as N0CALL. Please change this, otherwise telemetry data may be discarded!")
@@ -1157,6 +1220,22 @@ class MainWindow(QMainWindow):
                 self.widgets["latestPacketLatitudeValue"].setText(f"{_decoded['latitude']:.5f}")
                 self.widgets["latestPacketLongitudeValue"].setText(f"{_decoded['longitude']:.5f}")
                 self.widgets["latestPacketAltitudeValue"].setText(f"{_decoded['altitude']}")
+
+                # Update telemetry fields
+                if len(_decoded['custom_field_names']) > 0:
+                    column = 0
+                    for field in _decoded['custom_field_names']:
+                        self.widgets[f"latestTelem{column}Label"].setText(f"<b>{field}</b>")
+                        self.widgets[f"latestTelem{column}Value"].setText(f"{_decoded[field]}")
+
+                        column += 1
+
+                    # Hide remaining columns
+                    if column < 8:
+                        for i in range(column, 9):
+                            self.widgets[f"latestTelem{column}Label"].hide()
+                            self.widgets[f"latestTelem{column}Value"].hide()
+                            
 
                 # Attempt to update the range/elevation/bearing fields.
                 try:
