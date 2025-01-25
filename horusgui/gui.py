@@ -15,7 +15,7 @@ if sys.version_info < (3, 0):
 
 import argparse
 import datetime
-import glob
+# import glob
 import logging
 import platform
 import time
@@ -25,8 +25,6 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 from pyqtgraph.dockarea import *
-# import qdarktheme
-from threading import Thread
 
 from .widgets import *
 from .audio import *
@@ -173,7 +171,8 @@ class MainWindow(QMainWindow):
         # Audio Parameters
         self.widgets["audioDeviceLabel"] = QLabel("<b>Audio Device:</b>")
         self.widgets["audioDeviceSelector"] = QComboBox()
-        self.widgets["audioDeviceSelector"].setFixedWidth(300) # Dirty, but it needed to be done
+        # self.widgets["audioDeviceSelector"].setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
+        self.widgets["audioDeviceSelector"].setFixedWidth(225) # Dirty, but it needed to be done
         self.widgets["audioDeviceSelector"].currentIndexChanged.connect(self.update_audio_sample_rates)
 
         self.widgets["audioSampleRateLabel"] = QLabel("<b>Sample Rate (Hz):</b>")
@@ -249,11 +248,11 @@ class MainWindow(QMainWindow):
         w1_modem_groupbox.setLayout(w1_modem)
 
 
-        w1_habitat_groupbox = QGroupBox('SondeHub')
-        w1_habitat = QGridLayout(w1_habitat_groupbox)
+        w1_habitat_widget = QWidget()
+        w1_habitat = QGridLayout(w1_habitat_widget)
         # Listener Information
         self.widgets["habitatHeading"] = QLabel("<b>SondeHub Settings</b>")
-        self.widgets["sondehubUploadLabel"] = QLabel("<b>Enable SondeHub-Ham Upload:</b>")
+        self.widgets["sondehubUploadLabel"] = QLabel("<b>Enable SondeHub Upload:</b>")
         self.widgets["sondehubUploadSelector"] = QCheckBox()
         self.widgets["sondehubUploadSelector"].setChecked(True)
         self.widgets["sondehubUploadSelector"].clicked.connect(self.habitat_inhibit)
@@ -324,10 +323,10 @@ class MainWindow(QMainWindow):
         w1_habitat.addWidget(self.widgets["sondehubPositionNotesLabel"], 8, 0, 1, 3)
         w1_habitat.setRowStretch(9, 1) 
         w1_habitat.addWidget(self.widgets["saveSettingsButton"], 10, 0, 1, 3)
-        w1_habitat_groupbox.setLayout(w1_habitat)
+        w1_habitat_widget.setLayout(w1_habitat)
 
-        w1_other_groupbox = QGroupBox("Other")
-        w1_other = QGridLayout(w1_other_groupbox)
+        w1_other_widget = QWidget()
+        w1_other = QGridLayout(w1_other_widget)
         self.widgets["horusHeaderLabel"] = QLabel("<b><u>Telemetry Forwarding</u></b>")
         self.widgets["horusUploadLabel"] = QLabel("<b>Enable Horus UDP Output:</b>")
         self.widgets["horusUploadSelector"] = QCheckBox()
@@ -405,11 +404,11 @@ class MainWindow(QMainWindow):
         w1_other.addWidget(self.widgets["inhibitCRCLabel"], 11, 0, 1, 1)
         w1_other.addWidget(self.widgets["inhibitCRCSelector"], 11, 1, 1, 1)
         w1_other.setRowStretch(12, 1)
-        w1_other_groupbox.setLayout(w1_other)
+        w1_other_widget.setLayout(w1_other)
 
 
-        w1_rotator_groupbox = QGroupBox("Rotator")
-        w1_rotator = QGridLayout(w1_rotator_groupbox)
+        w1_rotator_widget = QWidget()
+        w1_rotator = QGridLayout(w1_rotator_widget)
         self.widgets["rotatorHeaderLabel"] = QLabel("<b><u>Rotator Control</u></b>")
 
         self.widgets["rotatorTypeLabel"] = QLabel("<b>Rotator Type:</b>")
@@ -475,14 +474,14 @@ class MainWindow(QMainWindow):
         w1_rotator.addWidget(self.widgets["rotatorCurrentPositionValue"], 8, 1, 1, 1)
         w1_rotator.setRowStretch(9, 1)
 
-        w1_rotator_groupbox.setLayout(w1_rotator)
+        w1_rotator_widget.setLayout(w1_rotator)
 
         w1_tab_widget = QTabWidget()
         w1_tab_widget.setTabPosition(QTabWidget.TabPosition.North)
         w1_tab_widget.tabBar().setExpanding(True)
-        w1_tab_widget.addTab(w1_habitat_groupbox, "SondeHub")
-        w1_tab_widget.addTab(w1_other_groupbox, "Other")
-        w1_tab_widget.addTab(w1_rotator_groupbox, "Rotator")
+        w1_tab_widget.addTab(w1_habitat_widget, "SondeHub")
+        w1_tab_widget.addTab(w1_other_widget, "Other")
+        w1_tab_widget.addTab(w1_rotator_widget, "Rotator")
         w1_tab_widget.setStyleSheet("QTabBar {font: bold 14px;}")
 
         # Add widgets to left column
@@ -497,31 +496,31 @@ class MainWindow(QMainWindow):
         self.widgets["spectrumPlot"] = pg.PlotWidget(title="Spectra")
         self.widgets["spectrumPlot"].setLabel("left", "Power (dB)")
         self.widgets["spectrumPlot"].setLabel("bottom", "Frequency (Hz)")
-        self.widgets["spectrumPlotData"] = self.widgets["spectrumPlot"].plot([0])
+        self.widgets["spectrumPlotData"] = self.widgets["spectrumPlot"].plot([0], pen=pg.mkPen(width=2))
 
         # Frequency Estiator Outputs
         self.widgets["estimatorLines"] = [
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
                 label="F1",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
                 label="F2",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
                 label="F3",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=2, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
                 label="F4",
                 labelOpts={'position':0.9}
             ),
@@ -584,7 +583,7 @@ class MainWindow(QMainWindow):
         self.widgets["snrPlotRange"] = [-10, 30]
         self.widgets["snrPlotTime"] = np.array([])
         self.widgets["snrPlotSNR"] = np.array([])
-        self.widgets["snrPlotData"] = self.widgets["snrPlot"].plot(self.widgets["snrPlotTime"], self.widgets["snrPlotSNR"])
+        self.widgets["snrPlotData"] = self.widgets["snrPlot"].plot(self.widgets["snrPlotTime"], self.widgets["snrPlotSNR"], pen=pg.mkPen(width=2))
         w3_snr.addWidget(self.widgets["snrPlot"])
 
         w3_snr_groupbox.setLayout(w3_snr)
@@ -721,7 +720,7 @@ class MainWindow(QMainWindow):
 
         right_column.setColumnStretch(0, 10)
         right_column.setColumnStretch(1, 6)
-        right_column.setColumnStretch(2, 1)        
+        right_column.setColumnStretch(2, 1)
 
         # Grid: (Row, Column, RowSpan, ColumnSpan)
         self.mainLayout.addLayout(left_column, 0, 0, 1, 1)
@@ -971,7 +970,9 @@ class MainWindow(QMainWindow):
         _data = data["fft"]
         _dbfs = data["dbfs"]
 
-        self.widgets["spectrumPlotData"].setData(_scale, _data)
+        _tc = 0.25
+        _plot_data = (self.widgets["spectrumPlotData"].getData()[1] * (1 - _tc) + (_data * _tc))
+        self.widgets["spectrumPlotData"].setData(_scale, _plot_data)
 
         # Really basic IIR to smoothly adjust scale
         _old_max = self.widgets["spectrumPlotRange"][1]
@@ -1547,7 +1548,6 @@ class ConsoleHandler(logging.Handler):
 # Main
 def main():
     app = QApplication(sys.argv)
-    # app.setStyleSheet(qdarktheme.load_stylesheet())
     window = MainWindow()
     app.aboutToQuit.connect(window.cleanup)
     window.show()
