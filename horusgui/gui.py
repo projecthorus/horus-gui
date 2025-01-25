@@ -442,9 +442,9 @@ class MainWindow(QMainWindow):
             "Default for PSTRotator: 12000"
         )
         self.widgets["rotatorRangeInhibitLabel"] = QLabel("<b>Inhibit Local Movement:</b>")
-        self.widgets["rotatorRangeInhibitCheckBox"] = QCheckBox()
-        self.widgets["rotatorRangeInhibitCheckBox"].setChecked(True)
-        self.widgets["rotatorRangeInhibitCheckBox"].setToolTip(
+        self.widgets["rotatorRangeInhibit"] = QCheckBox()
+        self.widgets["rotatorRangeInhibit"].setChecked(True)
+        self.widgets["rotatorRangeInhibit"].setToolTip(
             "Inhibit Horus GUI from sending rotator position updates\n"\
             "if range is less than 250 meters. This is useful if testing\n"\
             "transmitter in close vicinity of receiver."
@@ -477,7 +477,7 @@ class MainWindow(QMainWindow):
         #w1_rotator.addWidget(self.widgets["rotatorThresholdLabel"], 4, 0, 1, 1)
         #w1_rotator.addWidget(self.widgets["rotatorThresholdEntry"], 4, 1, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorRangeInhibitLabel"], 5, 0, 1, 1)
-        w1_rotator.addWidget(self.widgets["rotatorRangeInhibitCheckBox"], 5, 1, 1, 1)
+        w1_rotator.addWidget(self.widgets["rotatorRangeInhibit"], 5, 1, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorConnectButton"], 6, 0, 1, 2)
         w1_rotator.addWidget(self.widgets["rotatorCurrentStatusLabel"], 7, 0, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorCurrentStatusValue"], 7, 1, 1, 1)
@@ -1264,7 +1264,7 @@ class MainWindow(QMainWindow):
                         self.widgets['latestPacketRangeValue'].setText(f"{_position_info['straight_distance']/1000.0:.1f}")
 
                         _range_inhibit = False
-                        if self.widgets["rotatorRangeInhibitCheckBox"].isChecked() and (_position_info['straight_distance'] < 250):
+                        if self.widgets["rotatorRangeInhibit"].isChecked() and (_position_info['straight_distance'] < 250):
                             logging.debug("Rotator - Not moving due to Range Inhibit (less than 250m)")
                             _range_inhibit = True
 

@@ -34,6 +34,7 @@ default_config = {
     "rotator_type": "rotctld",
     "rotator_host": "localhost",
     "rotator_port": 4533,
+    "rotator_rangeinhibit": True,
     "logging_enabled": False,
     "log_format": "CSV",
     "log_directory": "",
@@ -124,6 +125,7 @@ def read_config(widgets):
         widgets["rotatorTypeSelector"].setCurrentText(default_config["rotator_type"])
         widgets["rotatorHostEntry"].setText(str(default_config["rotator_host"]))
         widgets["rotatorPortEntry"].setText(str(default_config["rotator_port"]))
+        widgets["rotatorRangeInhibit"].setChecked(default_config["rotator_rangeinhibit"])
 
         # Logging Settings
         widgets["loggingPathEntry"].setText(str(default_config["log_directory"]))
@@ -173,6 +175,7 @@ def save_config(widgets):
         default_config["rotator_type"] = widgets["rotatorTypeSelector"].currentText()
         default_config["rotator_host"] = widgets["rotatorHostEntry"].text()
         default_config["rotator_port"] = int(widgets["rotatorPortEntry"].text())
+        default_config["rotator_rangeinhibit"] = widgets["rotatorRangeInhibit"].isChecked()
         default_config["logging_enabled"] = widgets["enableLoggingSelector"].isChecked()
         default_config["log_directory"] = widgets["loggingPathEntry"].text()
         default_config["log_format"] = widgets["loggingFormatSelector"].currentText()
