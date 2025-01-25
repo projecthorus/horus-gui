@@ -125,7 +125,7 @@ def read_config(widgets):
         widgets["rotatorTypeSelector"].setCurrentText(default_config["rotator_type"])
         widgets["rotatorHostEntry"].setText(str(default_config["rotator_host"]))
         widgets["rotatorPortEntry"].setText(str(default_config["rotator_port"]))
-        widgets["rotatorRangeInhibit"].setChecked(default_config["rotator_rangeinhibit"])
+        widgets["rotatorRangeInhibit"].setChecked(ValueToBool(default_config["rotator_rangeinhibit"]))
 
         # Logging Settings
         widgets["loggingPathEntry"].setText(str(default_config["log_directory"]))
