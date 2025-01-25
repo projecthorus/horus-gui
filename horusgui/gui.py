@@ -672,7 +672,7 @@ class MainWindow(QMainWindow):
         w4_position.addWidget(self.widgets["latestPacketElevationValue"], 1, 8, 1, 1)
         w4_position.addWidget(self.widgets["latestPacketRangeLabel"], 0, 9, 1, 1)
         w4_position.addWidget(self.widgets["latestPacketRangeValue"], 1, 9, 1, 1)
-        w4_position.setRowStretch(1, 6)
+        #w4_position.setRowStretch(1, 6)
 
         w4_position_groupbox.setLayout(w4_position)
 
@@ -729,7 +729,7 @@ class MainWindow(QMainWindow):
         self.w5_telemetry.addWidget(self.widgets["latestTelem7Value"], 1, 7, 1, 1)
         self.w5_telemetry.addWidget(self.widgets["latestTelem8Label"], 0, 8, 1, 1)
         self.w5_telemetry.addWidget(self.widgets["latestTelem8Value"], 1, 8, 1, 1)
-        self.w5_telemetry.setRowStretch(1, 6)
+        #self.w5_telemetry.setRowStretch(1, 6)
 
         w6_groupbox = QGroupBox("Log")
         w6_groupbox.setObjectName("b1")
@@ -738,6 +738,7 @@ class MainWindow(QMainWindow):
         self.widgets["console"] = QPlainTextEdit()
         self.widgets["console"].setReadOnly(True)
         w6.addWidget(self.widgets["console"])
+        w6.setRowStretch(0, 1)
         
         w6_groupbox.setLayout(w6)
 
