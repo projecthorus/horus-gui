@@ -735,6 +735,7 @@ class MainWindow(QMainWindow):
         w6 = QGridLayout(w6_groupbox)
         self.widgets["console"] = QPlainTextEdit()
         self.widgets["console"].setReadOnly(True)
+        self.widgets["console"].setMaximumBlockCount(1000)
         w6.addWidget(self.widgets["console"])
         w6.setRowStretch(0, 1)
         
