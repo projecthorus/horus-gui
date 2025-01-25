@@ -122,7 +122,6 @@ class MainWindow(QMainWindow):
         self.DEFAULT_ESTIMATOR_MIN = 100
         self.DEFAULT_ESTIMATOR_MAX = 4000
 
-
         # Global widget store
         self.widgets = {}
 
@@ -143,9 +142,12 @@ class MainWindow(QMainWindow):
         self.rotator_current_az = 0.0
         self.rotator_current_el = 0.0
 
-
         # Global running indicator
         self.running = False
+
+        # Decoded packet signal
+        self.new_packet_signal = WorkerSignals()
+        self.new_packet_signal.info.connect(self.handle_new_packet)
 
         self.initialize()
 
@@ -471,7 +473,7 @@ class MainWindow(QMainWindow):
         w1_rotator.addWidget(self.widgets["rotatorCurrentStatusValue"], 7, 1, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorCurrentPositionLabel"], 8, 0, 1, 1)
         w1_rotator.addWidget(self.widgets["rotatorCurrentPositionValue"], 8, 1, 1, 1)
-        w1_rotator.setRowStretch(7, 1)
+        w1_rotator.setRowStretch(9, 1)
 
         w1_rotator_groupbox.setLayout(w1_rotator)
 
@@ -484,13 +486,6 @@ class MainWindow(QMainWindow):
         w1_tab_widget.setStyleSheet("QTabBar {font: bold 14px;}")
 
         # Add widgets to left column
-        # w1_audio_groupbox.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        # w1_modem_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
-        # w1_tab_widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
-        # w1_habitat_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
-        # w1_other_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
-        # w1_rotator_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
-
         left_column.addWidget(w1_audio_groupbox) #, 0, 0, 1, 1)
         left_column.addWidget(w1_modem_groupbox) #, 1, 0, 1, 1)
         left_column.addWidget(w1_tab_widget) #, 2, 0, 1, 1)
@@ -693,40 +688,15 @@ class MainWindow(QMainWindow):
         self.widgets["latestTelem3Label"] = QLabel("<b>External Pressure</b>")
         self.widgets["latestTelem3Value"] = QLabel("---")
         self.widgets["latestTelem3Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
-        self.widgets["latestTelem4Label"] = QLabel()
-        self.widgets["latestTelem4Value"] = QLabel()
-        self.widgets["latestTelem4Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
-        self.widgets["latestTelem5Label"] = QLabel()
-        self.widgets["latestTelem5Value"] = QLabel()
-        self.widgets["latestTelem5Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
-        self.widgets["latestTelem6Label"] = QLabel()
-        self.widgets["latestTelem6Value"] = QLabel()
-        self.widgets["latestTelem6Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
-        self.widgets["latestTelem7Label"] = QLabel()
-        self.widgets["latestTelem7Value"] = QLabel()
-        self.widgets["latestTelem7Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
-        self.widgets["latestTelem8Label"] = QLabel()
-        self.widgets["latestTelem8Value"] = QLabel()
-        self.widgets["latestTelem8Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        for i in range(4,9):
+            self.widgets[f"latestTelem{i}Label"] = QLabel("")
+            self.widgets[f"latestTelem{i}Value"] = QLabel("")
+            self.widgets[f"latestTelem{i}Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
 
-        self.w5_telemetry.addWidget(self.widgets["latestTelem0Label"], 0, 0, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem0Value"], 1, 0, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem1Label"], 0, 1, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem1Value"], 1, 1, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem2Label"], 0, 2, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem2Value"], 1, 2, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem3Label"], 0, 3, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem3Value"], 1, 3, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem4Label"], 0, 4, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem4Value"], 1, 4, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem5Label"], 0, 5, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem5Value"], 1, 5, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem6Label"], 0, 6, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem6Value"], 1, 6, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem7Label"], 0, 7, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem7Value"], 1, 7, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem8Label"], 0, 8, 1, 1)
-        self.w5_telemetry.addWidget(self.widgets["latestTelem8Value"], 1, 8, 1, 1)
+        for i in range(0,9):
+            self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Label"], 0, i, 1, 1)
+            self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Value"], 1, i, 1, 1)
+
         #self.w5_telemetry.setRowStretch(1, 6)
 
         w6_groupbox = QGroupBox("Log")
@@ -1095,6 +1065,8 @@ class MainWindow(QMainWindow):
         else:
             return np.max(self.widgets["snrPlotSNR"])
 
+    def handle_new_packet_emit(self, frame):
+        self.new_packet_signal.info.emit(frame)
 
     def handle_new_packet(self, frame):
         """ Handle receipt of a newly decoded packet """
@@ -1108,14 +1080,11 @@ class MainWindow(QMainWindow):
                 # RTTY packets are provided as a string, and can be displayed directly
                 _packet = frame.data
             
-
-
             _decoded = None
 
             # Grab SNR.
             _snr = self.get_latest_snr()
             #logging.info(f"Packet SNR: {_snr:.2f}")
-
 
             # Grab other metadata out of the GUI
             _radio_dial = None
@@ -1363,7 +1332,7 @@ class MainWindow(QMainWindow):
                 mode=_modem_id,
                 rate=_modem_rate,
                 tone_spacing=_modem_tone_spacing,
-                callback=self.handle_new_packet,
+                callback=self.handle_new_packet_emit,
                 sample_rate=_sample_rate
             )
 
