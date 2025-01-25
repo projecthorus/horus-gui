@@ -441,8 +441,16 @@ class MainWindow(QMainWindow):
             "Default for rotctld: 4533\n"\
             "Default for PSTRotator: 12000"
         )
+        self.widgets["rotatorRangeInhibitLabel"] = QLabel("<b>Inhibit Local Movement:</b>")
+        self.widgets["rotatorRangeInhibitCheckBox"] = QCheckBox()
+        self.widgets["rotatorRangeInhibitCheckBox"].setChecked(True)
+        self.widgets["rotatorRangeInhibitCheckBox"].setToolTip(
+            "Inhibit Horus GUI from sending rotator position updates\n"\
+            "if range is less than 250 meters. This is useful if testing\n"\
+            "transmitter in close vicinity of receiver."
+        )
         self.widgets["rotatorThresholdLabel"] = QLabel("<b>Rotator Movement Threshold:</b>")
-        self.widgets["rotatorThresholdEntry"] = QLineEdit("5.0")
+        self.widgets["rotatorThresholdEntry"] = QLineEdit("2.5")
         self.widgets["rotatorThresholdEntry"].setToolTip(
             "Only move if the angle between the payload position and \n"\
             "the current rotator position is more than this, in degrees."
@@ -468,11 +476,13 @@ class MainWindow(QMainWindow):
         w1_rotator.addWidget(self.widgets["rotatorPortEntry"], 3, 1, 1, 1)
         #w1_rotator.addWidget(self.widgets["rotatorThresholdLabel"], 4, 0, 1, 1)
         #w1_rotator.addWidget(self.widgets["rotatorThresholdEntry"], 4, 1, 1, 1)
-        w1_rotator.addWidget(self.widgets["rotatorConnectButton"], 4, 0, 1, 2)
-        w1_rotator.addWidget(self.widgets["rotatorCurrentStatusLabel"], 5, 0, 1, 1)
-        w1_rotator.addWidget(self.widgets["rotatorCurrentStatusValue"], 5, 1, 1, 1)
-        w1_rotator.addWidget(self.widgets["rotatorCurrentPositionLabel"], 6, 0, 1, 1)
-        w1_rotator.addWidget(self.widgets["rotatorCurrentPositionValue"], 6, 1, 1, 1)
+        w1_rotator.addWidget(self.widgets["rotatorRangeInhibitLabel"], 5, 0, 1, 1)
+        w1_rotator.addWidget(self.widgets["rotatorRangeInhibitCheckBox"], 5, 1, 1, 1)
+        w1_rotator.addWidget(self.widgets["rotatorConnectButton"], 6, 0, 1, 2)
+        w1_rotator.addWidget(self.widgets["rotatorCurrentStatusLabel"], 7, 0, 1, 1)
+        w1_rotator.addWidget(self.widgets["rotatorCurrentStatusValue"], 7, 1, 1, 1)
+        w1_rotator.addWidget(self.widgets["rotatorCurrentPositionLabel"], 8, 0, 1, 1)
+        w1_rotator.addWidget(self.widgets["rotatorCurrentPositionValue"], 8, 1, 1, 1)
         w1_rotator.setRowStretch(7, 1)
 
         w1_rotator_groupbox.setLayout(w1_rotator)
@@ -1253,7 +1263,12 @@ class MainWindow(QMainWindow):
                         self.widgets['latestPacketElevationValue'].setText(f"{_position_info['elevation']:.1f}")
                         self.widgets['latestPacketRangeValue'].setText(f"{_position_info['straight_distance']/1000.0:.1f}")
 
-                        if self.rotator and not ( _decoded['latitude'] == 0.0 and _decoded['longitude'] == 0.0 ):
+                        _range_inhibit = False
+                        if self.widgets["rotatorRangeInhibitCheckBox"].isChecked() and (_position_info['straight_distance'] < 250):
+                            logging.debug("Rotator - Not moving due to Range Inhibit (less than 250m)")
+                            _range_inhibit = True
+
+                        if self.rotator and not ( _decoded['latitude'] == 0.0 and _decoded['longitude'] == 0.0 ) and not _range_inhibit:
                             try:
                                 self.rotator.set_azel(_position_info['bearing'], _position_info['elevation'], check_response=False)
                                 self.widgets["rotatorCurrentPositionValue"].setText(f"{_position_info['bearing']:3.1f}˚,  {_position_info['elevation']:2.1f}˚")
