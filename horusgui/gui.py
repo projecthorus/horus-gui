@@ -484,7 +484,7 @@ class MainWindow(QMainWindow):
         w1_tab_widget.setStyleSheet("QTabBar {font: bold 14px;}")
 
         # Add widgets to left column
-        # w1_audio_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
+        # w1_audio_groupbox.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         # w1_modem_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
         # w1_tab_widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
         # w1_habitat_groupbox.setSizePolicy(QSizePolicy.Policy.MinimumExpanding)
@@ -494,8 +494,6 @@ class MainWindow(QMainWindow):
         left_column.addWidget(w1_audio_groupbox) #, 0, 0, 1, 1)
         left_column.addWidget(w1_modem_groupbox) #, 1, 0, 1, 1)
         left_column.addWidget(w1_tab_widget) #, 2, 0, 1, 1)
-        #left_column.
-        # left_column.maximumSize(QSize.setWidth(225))
 
         # Right Column QGrid (Grid for merged cells)
         right_column = QGridLayout()
@@ -752,24 +750,14 @@ class MainWindow(QMainWindow):
 
         right_column.setColumnStretch(0, 10)
         right_column.setColumnStretch(1, 6)
-        right_column.setColumnStretch(2, 1)
+        right_column.setColumnStretch(2, 1)        
 
-        # right_column.setRowStretch(0, 5)
-        # right_column.setRowStretch(1, 3)
-        # right_column.setRowStretch(2, 3)
-        # right_column.setRowStretch(3, 3)
-
+        # Grid: (Row, Column, RowSpan, ColumnSpan)
         self.mainLayout.addLayout(left_column, 0, 0, 1, 1)
         self.mainLayout.addLayout(right_column, 0, 1, 1, 1)
 
-        # Grid: (Row, Column, RowSpan, ColumnSpan)
-        # self.mainLayout.setVerticalSpacing(4)
-        # self.mainLayout.addWidget(self.titleLabel, 0, 0, 1, 1)
-        # self.mainLayout.addWidget(self.tabWidget, 1, 0, 1, 1)
-        # self.mainLayout.addLayout(self.rightLayout, 1, 1, 1, 1)
-        # self.mainLayout.setContentsMargins(0, 25, 25, 25)
-        self.mainLayout.setColumnStretch(0, 0)
-        self.mainLayout.setColumnStretch(1, 1)
+        self.mainLayout.setColumnStretch(0, 1)
+        self.mainLayout.setColumnStretch(1, 10)
 
         # Resize window to final resolution, and display.
         logging.info("Starting GUI.")
