@@ -150,10 +150,6 @@ class MainWindow(QMainWindow):
         self.initialize()
 
     def initialize(self):
-        #
-        #   GUI Creation - The Bad way.
-        #
-
         # GUI LAYOUT - Gtk Style!
         self.setWindowTitle(f"Horus Telemetry GUI - v{__version__}")
         self.setWindowIcon(getHorusIcon())
