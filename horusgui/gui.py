@@ -21,7 +21,6 @@ import platform
 import time
 import pyqtgraph as pg
 import numpy as np
-from queue import Queue
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
@@ -73,9 +72,9 @@ else:
 
 # Establish signals and worker for multi-threaded use
 class WorkerSignals(QObject):
-    finished = pyqtSignal()
+    # finished = pyqtSignal()
     error = pyqtSignal(tuple)
-    result = pyqtSignal(object)
+    # result = pyqtSignal(object)
     info = pyqtSignal(object)
 
 class Worker(QRunnable):
@@ -97,10 +96,10 @@ class Worker(QRunnable):
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
-        else:
-            self.signals.result.emit(result)
-        finally:
-            self.signals.finished.emit()
+        # else:
+        #     self.signals.result.emit(result)
+        # finally:
+        #     self.signals.finished.emit()
 
 def resource_path(relative_path):
     try:
@@ -127,11 +126,6 @@ class MainWindow(QMainWindow):
         # Global widget store
         self.widgets = {}
 
-        # Queues for handling updates to image / status indications.
-        self.fft_update_queue = Queue(1024)
-        self.status_update_queue = Queue(1024)
-        self.log_update_queue = Queue(2048)
-
         # List of audio devices and their info
         self.audio_devices = {}
 
@@ -141,8 +135,6 @@ class MainWindow(QMainWindow):
         self.horus_modem = None
         self.sondehub_uploader = None
         self.telemetry_logger = None
-
-        self.decoder_init = False
 
         self.last_packet_time = None
 
@@ -828,18 +820,27 @@ class MainWindow(QMainWindow):
             enabled = self.widgets["enableLoggingSelector"].isChecked()
         )
 
-        self.gui_update_timer = QTimer()
-        self.gui_update_timer.timeout.connect(self.processQueues)
-        self.gui_update_timer.start(100)
+        # Init payload IDs and such in singleShot timer
+        self.payload_init_timer = QTimer()
+        self.payload_init_timer.singleShot(100, self.payload_init)
 
         # Add console handler to top level logger.
-        console_handler = ConsoleHandler(self.log_update_queue)
+        console_handler = ConsoleHandler(self.handle_log_update)
         logging.getLogger().addHandler(console_handler)
 
         logging.info("Started GUI.")
 
 
     def cleanup(self):
+        self.running = False
+
+        try:
+            if self.horus_modem:
+                self.horus_modem.close()
+                self.horus_modem = None
+        except Exception as e:
+            pass
+
         try:
             self.audio_stream.stop()
         except Exception as e:
@@ -855,16 +856,16 @@ class MainWindow(QMainWindow):
         except:
             pass
 
-        try:
-            self.telemetry_logger.close()
-        except:
-            pass
-
         if self.rotator:
             try:
                 self.rotator.close()
             except:
                 pass
+
+        try:
+            self.telemetry_logger.close()
+        except:
+            pass
 
 
     def update_audio_sample_rates(self):
@@ -1006,7 +1007,7 @@ class MainWindow(QMainWindow):
         save_config(self.widgets)
 
 
-    # Handlers for data arriving via queues.
+    # Handlers for data arriving via callbacks
     def handle_fft_update(self, data):
         """ Handle a new FFT update """
 
@@ -1107,24 +1108,6 @@ class MainWindow(QMainWindow):
             return np.max(self.widgets["snrPlotSNR"][-1*_snr_lookback:])
         else:
             return np.max(self.widgets["snrPlotSNR"])
-
-
-    def add_fft_update(self, data):
-        """ Try and insert a new set of FFT data into the update queue """
-        try:
-            self.fft_update_queue.put_nowait(data)
-        except:
-            logging.error("FFT Update Queue Full!")
-
-
-    def add_stats_update(self, frame):
-        """ Try and insert modem statistics into the processing queue """
-        try:
-            self.status_update_queue.put_nowait(frame)
-        except:
-            logging.error("Status Update Queue Full!")
-        
-
 
 
     def handle_new_packet(self, frame):
@@ -1374,8 +1357,15 @@ class MainWindow(QMainWindow):
                 stride=STRIDE,
                 update_decimation=1,
                 fs=_sample_rate, 
-                callback=self.add_fft_update
             )
+
+            # Create FFT Processor worker thread
+            worker = Worker(self.fft_process.processing_thread)
+            # worker.signals.result.connect(self.null_thread_complete)
+            # worker.signals.finished.connect(self.null_thread_complete)
+            worker.signals.info.connect(self.handle_fft_update)
+
+            self.threadpool.start(worker)
 
             # Setup Modem
             _libpath = ""
@@ -1405,8 +1395,14 @@ class MainWindow(QMainWindow):
                     block_size=self.fft_process.stride,
                     fft_input=self.fft_process.add_samples,
                     modem=self.horus_modem,
-                    stats_callback=self.add_stats_update
                 )
+                
+                # Create UDP stream worker thread
+                worker = Worker(self.audio_stream.udp_listen_thread)
+                worker.signals.info.connect(self.handle_status_update)
+                self.threadpool.start(worker)
+            
+
             else:
                 self.audio_stream = AudioStream(
                     _dev_index,
@@ -1414,12 +1410,24 @@ class MainWindow(QMainWindow):
                     block_size=self.fft_process.stride,
                     fft_input=self.fft_process.add_samples,
                     modem=self.horus_modem,
-                    stats_callback=self.add_stats_update
                 )
+
+                # Create AudioStream worker thred
+                worker = Worker(self.audio_stream.start_stream)
+                worker.signals.info.connect(self.handle_status_update)
+                self.threadpool.start(worker)
 
             self.widgets["startDecodeButton"].setText("Stop")
             self.running = True
             logging.info("Started Audio Processing.")
+
+            # Start thread to update the last packet age
+            worker = Worker(self.decoded_age_thread)
+            # worker.signals.result.connect(self.null_thread_complete)
+            # worker.signals.finished.connect(self.null_thread_complete)
+            worker.signals.info.connect(self.handle_decoded_age_update)
+
+            self.threadpool.start(worker)
 
             # Grey out some selectors, so the user cannot adjust them while we are decoding.
             self.widgets["audioDeviceSelector"].setEnabled(False)
@@ -1447,9 +1455,6 @@ class MainWindow(QMainWindow):
 
             self.horus_modem = None
 
-            self.fft_update_queue = Queue(256)
-            self.status_update_queue = Queue(256)
-
             self.widgets["startDecodeButton"].setText("Start")
             self.running = False
 
@@ -1463,7 +1468,6 @@ class MainWindow(QMainWindow):
             self.widgets["horusMaskEstimatorSelector"].setEnabled(True)
             self.widgets["horusMaskSpacingEntry"].setEnabled(True)
 
-
     def handle_log_update(self, log_update):
         self.widgets["console"].appendPlainText(log_update)
         # Make sure the scroll bar is right at the bottom.
@@ -1471,44 +1475,29 @@ class MainWindow(QMainWindow):
         _sb.setValue(_sb.maximum())
 
 
-    # GUI Update Loop
-    def processQueues(self):
-        """ Read in data from the queues, this decouples the GUI and async inputs somewhat. """
-        global args
+    # Payload init
+    def payload_init(self):
+        global args 
 
-        while self.fft_update_queue.qsize() > 0:
-            _data = self.fft_update_queue.get()
+        # Initialise decoders, and other libraries here.
+        init_payloads(payload_id_list = args.payload_id_list, custom_field_list = args.custom_field_list)
+        # Once initialised, enable the start button
+        self.widgets["startDecodeButton"].setEnabled(True)
 
-            self.handle_fft_update(_data)
-
-        while self.status_update_queue.qsize() > 0:
-            _status = self.status_update_queue.get()
-
-            self.handle_status_update(_status)
-
-        while self.log_update_queue.qsize() > 0:
-            _log = self.log_update_queue.get()
-            
-            self.handle_log_update(_log)
-
-        if self.running:
+    # Thread to update last packet age
+    def decoded_age_thread(self, info_callback):
+        while self.running:
             if self.last_packet_time != None:
                 _time_delta = int(time.time() - self.last_packet_time)
                 _time_delta_seconds = int(_time_delta%60)
                 _time_delta_minutes = int((_time_delta/60) % 60)
                 _time_delta_hours = int((_time_delta/3600))
-                self.widgets['latestDecodedAgeData'].setText(f"{_time_delta_hours:02d}:{_time_delta_minutes:02d}:{_time_delta_seconds:02d}")
+                info_callback.emit(f"{_time_delta_hours:02d}:{_time_delta_minutes:02d}:{_time_delta_seconds:02d}")
 
-        # Try and force a re-draw.
-        QApplication.processEvents()
+            time.sleep(0.5)
 
-        if not self.decoder_init:
-            # Initialise decoders, and other libraries here.
-            init_payloads(payload_id_list = args.payload_id_list, custom_field_list = args.custom_field_list)
-            self.decoder_init = True
-            # Once initialised, enable the start button
-            self.widgets["startDecodeButton"].setEnabled(True)
-
+    def handle_decoded_age_update(self, text):
+        self.widgets['latestDecodedAgeData'].setText(text)
 
     # Rotator Control
     def startstop_rotator(self):
@@ -1533,7 +1522,16 @@ class MainWindow(QMainWindow):
                     return
             elif self.widgets["rotatorTypeSelector"].currentText() == "PSTRotator":
                 self.rotator = PSTRotator(hostname=_host, port=_port, threshold=_threshold)
+                
+                # Create worker thread for commanding rotator
+                worker = Worker(self.rotator.azel_rx_loop)
+                worker.signals.info.connect(self.info_callback)
+                self.threadpool.start(worker)
 
+                # Create worker thread for receiving info from rotator
+                worker = Worker(self.rotator.azel_poll_loop)
+                worker.signals.info.connect(self.info_callback)
+                self.threadpool.start(worker)
             else:
                 return
 
@@ -1568,22 +1566,28 @@ class MainWindow(QMainWindow):
     # rotator_poll_timer.timeout.connect(poll_rotator)
     # rotator_poll_timer.start(2000)
 
+    # Dummy function to call from worker threads
+    def null_thread_complete(self):
+        logging.debug("Thread exit!!!")
+        return
 
 class ConsoleHandler(logging.Handler):
     """ Logging handler to write to the GUI console """
 
-    def __init__(self, log_queue):
+    def __init__(self, callback):
         logging.Handler.__init__(self)
-        self.log_queue = log_queue
+        self.signaller = WorkerSignals()
+        self.signaller.info.connect(callback)
 
     def emit(self, record):
         _time = datetime.datetime.now()
         _text = f"{_time.strftime('%H:%M:%S')} [{record.levelname}]  {record.msg}"
-
+        
+        # TODO -- create gentle dismount when exiting
         try:
-            self.log_queue.put_nowait(_text)
+            self.signaller.info.emit(_text)
         except:
-            print("Console Log Queue full!")
+            pass
 
 # Main
 def main():

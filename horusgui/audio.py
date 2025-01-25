@@ -1,6 +1,7 @@
 # Audio Interfacing
 import logging
 import pyaudio
+import time
 
 
 # Global PyAudio object
@@ -125,8 +126,14 @@ class AudioStream(object):
         self.modem = modem
         self.stats_callback = stats_callback
 
-        # Start audio stream
+        self.audio_thread_running = True
+
         self.audio = pyaudio.PyAudio()
+        
+    def start_stream(self, info_callback=None):
+        if info_callback:
+            self.stats_callback = info_callback
+
         self.stream = self.audio.open(
             format=pyaudio.paInt16,
             channels=1,
@@ -137,6 +144,11 @@ class AudioStream(object):
             output=False,
             stream_callback=self.handle_samples,
         )
+
+        while self.audio_thread_running:
+            time.sleep(0.5)
+
+        logging.debug("Stopped audio stream thread")
 
     def handle_samples(self, data, frame_count, time_info="", status_flags=""):
         """ Handle incoming samples from pyaudio """
@@ -151,10 +163,11 @@ class AudioStream(object):
             # Send any stats data back to the stats callback
             if _stats:
                 if self.stats_callback:
-                    self.stats_callback(_stats)
+                    self.stats_callback.emit(_stats)
 
         return (None, pyaudio.paContinue)
 
     def stop(self):
         """ Halt stream """
+        self.audio_thread_running = False
         self.stream.close()

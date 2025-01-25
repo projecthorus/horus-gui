@@ -3,7 +3,7 @@ import logging
 import time
 import numpy as np
 from queue import Queue
-from threading import Thread
+#from threading import Thread
 
 
 class FFTProcess(object):
@@ -37,8 +37,8 @@ class FFTProcess(object):
 
         self.processing_thread_running = True
 
-        self.t = Thread(target=self.processing_thread)
-        self.t.start()
+        #self.t = Thread(target=self.processing_thread)
+        #self.t.start()
 
     def init_window(self):
         """ Initialise Window functions and FFT scales. """
@@ -74,7 +74,7 @@ class FFTProcess(object):
 
         if self.callback != None:
             if self.update_counter % self.update_decimation == 0:
-                self.callback({"fft": _fft[self.mask], "scale": self.fft_scale[self.mask], 'dbfs': _dbfs})
+                self.callback.emit({"fft": _fft[self.mask], "scale": self.fft_scale[self.mask], 'dbfs': _dbfs})
                 
             self.update_counter += 1
 
@@ -86,7 +86,9 @@ class FFTProcess(object):
         while len(self.sample_buffer) > self.nfft * self.sample_width:
             self.perform_fft()
 
-    def processing_thread(self):
+    def processing_thread(self, info_callback=None):
+        if info_callback:
+            self.callback = info_callback
 
         while self.processing_thread_running:
             if self.input_queue.qsize() > 0:
@@ -94,6 +96,8 @@ class FFTProcess(object):
                 self.process_block(data)
             else:
                 time.sleep(0.01)
+
+        logging.debug("Stopped FFT processing thread")
 
     def add_samples(self, samples):
         """ Add a block of samples to the input queue """

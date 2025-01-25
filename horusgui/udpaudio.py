@@ -1,7 +1,8 @@
 # UDP Audio Source (Obtaining audio from GQRX)
 import socket
 import traceback
-from threading import Thread
+#from threading import Thread
+
 
 class UDPStream(object):
     """ Listen for UDP Audio data from GQRX (s16, 48kHz), and pass data around to different callbacks """
@@ -19,12 +20,15 @@ class UDPStream(object):
 
         # Start audio stream
         self.listen_thread_running = True
-        self.listen_thread = Thread(target=self.udp_listen_thread)
-        self.listen_thread.start()
+        #self.listen_thread = Thread(target=self.udp_listen_thread)
+        #self.listen_thread.start()
 
 
-    def udp_listen_thread(self):
+    def udp_listen_thread(self, info_callback=None):
         """ Open a UDP socket and listen for incoming data """
+
+        if info_callback:
+            self.stats_callback = info_callback
 
         self.s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         self.s.settimeout(1)
@@ -50,7 +54,6 @@ class UDPStream(object):
 
         self.s.close()
 
-
     def handle_samples(self, data, frame_count, time_info="", status_flags=""):
         """ Handle incoming samples from pyaudio """
 
@@ -64,7 +67,7 @@ class UDPStream(object):
             # Send any stats data back to the stats callback
             if _stats:
                 if self.stats_callback:
-                    self.stats_callback(_stats)
+                    self.stats_callback.emit(_stats)
 
         return (None, None)
 
