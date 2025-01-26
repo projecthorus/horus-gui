@@ -1216,8 +1216,8 @@ class MainWindow(QMainWindow):
                 self.widgets["latestPacketAltitudeValue"].setText(f"{_decoded['altitude']}")
 
                 # Update telemetry fields
-                if 'batteryvoltage' in _decoded:
-                    self.widgets["latestTelemBattVoltageValue"].setText(f"{_decoded['batteryvoltage']:.2f}")
+                if 'battery_voltage' in _decoded:
+                    self.widgets["latestTelemBattVoltageValue"].setText(f"{_decoded['battery_voltage']:.2f}")
                 if 'satellites' in _decoded:
                     self.widgets["latestTelemSatellitesValue"].setText(f"{_decoded['satellites']}")
                 if 'temperature' in _decoded:
