@@ -718,6 +718,12 @@ class MainWindow(QMainWindow):
             self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Label"], 0, i+3, 1, 1)
             self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Value"], 1, i+3, 1, 1)
 
+        for i in range(0,7):
+            self.w5_telemetry.setColumnStretch(i, 10)
+        
+        for i in range(7, 12):
+            self.w5_telemetry.setColumnStretch(i, 1)
+
         #self.w5_telemetry.setRowStretch(1, 6)
 
         w6_groupbox = QGroupBox("Log")
@@ -1218,16 +1224,29 @@ class MainWindow(QMainWindow):
                 # Update telemetry fields
                 if 'battery_voltage' in _decoded:
                     self.widgets["latestTelemBattVoltageValue"].setText(f"{_decoded['battery_voltage']:.2f}")
+                else:
+                    self.widgets["latestTelemBattVoltageValue"].setText("---")
+
                 if 'satellites' in _decoded:
                     self.widgets["latestTelemSatellitesValue"].setText(f"{_decoded['satellites']}")
+                else:
+                    self.widgets["latestTelemSatellitesValue"].setText("---")
+
                 if 'temperature' in _decoded:
                     self.widgets["latestTelemTemperatureValue"].setText(f"{_decoded['temperature']:.1f}")
+                else:
+                    self.widgets["latestTelemTemperatureValue"].setText("---")
 
                 if len(_decoded['custom_field_names']) > 0:
                     column = 0
                     for field in _decoded['custom_field_names']:
-                        self.widgets[f"latestTelem{column}Label"].setText(f"<b>{field}</b>")
+                        field_nice = field.replace('_', ' ').title()
+                        self.widgets[f"latestTelem{column}Label"].setText(f"<b>{field_nice}</b>")
                         self.widgets[f"latestTelem{column}Value"].setText(f"{_decoded[field]}")
+                        self.widgets[f"latestTelem{column}Label"].show()
+                        self.widgets[f"latestTelem{column}Value"].show()
+
+                        self.w5_telemetry.setColumnStretch((column + 3), 10)
 
                         column += 1
 
@@ -1236,7 +1255,7 @@ class MainWindow(QMainWindow):
                         for i in range(column, 9):
                             self.widgets[f"latestTelem{column}Label"].hide()
                             self.widgets[f"latestTelem{column}Value"].hide()
-                            
+                            self.w5_telemetry.setColumnStretch((i + 3), 1)
 
                 # Attempt to update the range/elevation/bearing fields.
                 try:
