@@ -156,11 +156,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"Horus Telemetry GUI - v{__version__}")
         self.setWindowIcon(getHorusIcon())
 
-        self.mainWidget = QWidget()
-        self.setCentralWidget(self.mainWidget)
-        self.mainLayout = QGridLayout()
-        self.mainWidget.setLayout(self.mainLayout)
-
         # Left Column VBox
         left_column = QVBoxLayout()
 
@@ -174,7 +169,7 @@ class MainWindow(QMainWindow):
         self.widgets["audioDeviceLabel"] = QLabel("<b>Audio Device:</b>")
         self.widgets["audioDeviceSelector"] = QComboBox()
         # self.widgets["audioDeviceSelector"].setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
-        self.widgets["audioDeviceSelector"].setFixedWidth(275) # Dirty, but it needed to be done
+        # self.widgets["audioDeviceSelector"].setFixedWidth(275) # Dirty, but it needed to be done
         self.widgets["audioDeviceSelector"].currentIndexChanged.connect(self.update_audio_sample_rates)
 
         self.widgets["audioSampleRateLabel"] = QLabel("<b>Sample Rate (Hz):</b>")
@@ -724,12 +719,32 @@ class MainWindow(QMainWindow):
         right_column.setColumnStretch(1, 6)
         right_column.setColumnStretch(2, 1)
 
-        # Grid: (Row, Column, RowSpan, ColumnSpan)
-        self.mainLayout.addLayout(left_column, 0, 0, 1, 1)
-        self.mainLayout.addLayout(right_column, 0, 1, 1, 1)
+        left_column_widget = QWidget()
+        left_column_widget.setLayout(left_column)
 
-        self.mainLayout.setColumnStretch(0, 1)
-        self.mainLayout.setColumnStretch(1, 10)
+        right_column_widget = QWidget()
+        right_column_widget.setLayout(right_column)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.addWidget(left_column_widget)
+        splitter.addWidget(right_column_widget)
+
+        self.mainWidget = QWidget()
+        self.setCentralWidget(self.mainWidget)
+        self.mainLayout = QHBoxLayout()
+        self.mainWidget.setLayout(self.mainLayout)
+
+        self.mainLayout.addWidget(splitter)
+
+        # self.mainLayout = QGridLayout()
+        # self.mainWidget.setLayout(self.mainLayout)?
+
+        # # Grid: (Row, Column, RowSpan, ColumnSpan)
+        # self.mainLayout.addLayout(left_column, 0, 0, 1, 1)
+        # self.mainLayout.addLayout(right_column, 0, 1, 1, 1)
+
+        # self.mainLayout.setColumnStretch(0, 1)
+        # self.mainLayout.setColumnStretch(1, 10)
 
         # Resize window to final resolution, and display.
         logging.info("Starting GUI.")
