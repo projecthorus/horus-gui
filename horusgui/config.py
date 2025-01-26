@@ -38,6 +38,7 @@ default_config = {
     "logging_enabled": False,
     "log_format": "CSV",
     "log_directory": "",
+    "fft_smoothing": False,
     "payload_list": json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST),
     "custom_field_list": json.dumps({})
 }
@@ -132,6 +133,8 @@ def read_config(widgets):
         widgets["loggingFormatSelector"].setCurrentText(default_config["log_format"])
         widgets["enableLoggingSelector"].setChecked(ValueToBool(default_config["logging_enabled"]))
 
+        widgets["fftSmoothingSelector"].setChecked(ValueToBool(default_config["fft_smoothing"]))
+
         if default_config['baud_rate'] != -1:
             widgets["horusModemRateSelector"].setCurrentText(str(default_config['baud_rate']))
 
@@ -179,6 +182,7 @@ def save_config(widgets):
         default_config["logging_enabled"] = widgets["enableLoggingSelector"].isChecked()
         default_config["log_directory"] = widgets["loggingPathEntry"].text()
         default_config["log_format"] = widgets["loggingFormatSelector"].currentText()
+        default_config["fft_smoothing"] = widgets["fftSmoothingSelector"].isChecked()
 
         default_config["payload_list"] = json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST)
         default_config["custom_field_list"] = json.dumps(horusdemodlib.payloads.HORUS_CUSTOM_FIELDS)

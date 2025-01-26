@@ -379,6 +379,12 @@ class MainWindow(QMainWindow):
         self.widgets["inhibitCRCSelector"].setToolTip(
             "Hide CRC Failed error messages."
         )
+        self.widgets["fftSmoothingLabel"] = QLabel("<b>Enable FFT smoothing:</b>")
+        self.widgets["fftSmoothingSelector"] = QCheckBox()
+        self.widgets["fftSmoothingSelector"].setChecked(False)
+        self.widgets["fftSmoothingSelector"].setToolTip(
+            "Enable IIR filter on FFT with tc=0.25."
+        )
 
         w1_other.addWidget(self.widgets["horusHeaderLabel"], 0, 0, 1, 2)
         w1_other.addWidget(self.widgets["horusUploadLabel"], 1, 0, 1, 1)
@@ -400,7 +406,9 @@ class MainWindow(QMainWindow):
         w1_other.addWidget(self.widgets["otherHeaderLabel"], 10, 0, 1, 2)
         w1_other.addWidget(self.widgets["inhibitCRCLabel"], 11, 0, 1, 1)
         w1_other.addWidget(self.widgets["inhibitCRCSelector"], 11, 1, 1, 1)
-        w1_other.setRowStretch(12, 1)
+        w1_other.addWidget(self.widgets["fftSmoothingLabel"], 12, 0, 1, 1)
+        w1_other.addWidget(self.widgets["fftSmoothingSelector"], 12, 1, 1, 1)
+        w1_other.setRowStretch(13, 1)
         w1_other_widget.setLayout(w1_other)
 
 
@@ -499,25 +507,25 @@ class MainWindow(QMainWindow):
         self.widgets["estimatorLines"] = [
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="grey", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F1",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="grey", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F2",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="grey", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F3",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="grey", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F4",
                 labelOpts={'position':0.9}
             ),
@@ -987,11 +995,12 @@ class MainWindow(QMainWindow):
         _data = data["fft"]
         _dbfs = data["dbfs"]
 
-        # _tc = 0.25
-        # _plot_data = (self.widgets["spectrumPlotData"].getData()[1] * (1 - _tc) + (_data * _tc))
-        # self.widgets["spectrumPlotData"].setData(_scale, _plot_data)
-
-        self.widgets["spectrumPlotData"].setData(_scale, _data)
+        if self.widgets["fftSmoothingSelector"].isChecked():
+            _tc = 0.25
+            _plot_data = (self.widgets["spectrumPlotData"].getData()[1] * (1 - _tc) + (_data * _tc))
+            self.widgets["spectrumPlotData"].setData(_scale, _plot_data)
+        else:
+            self.widgets["spectrumPlotData"].setData(_scale, _data)
 
         # Really basic IIR to smoothly adjust scale
         _old_max = self.widgets["spectrumPlotRange"][1]
