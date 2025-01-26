@@ -680,7 +680,24 @@ class MainWindow(QMainWindow):
         w5_telemetry_groupbox.setLayout(self.w5_telemetry)
 
         # These are placeholders and will be updated when telemetry is received. 
-        self.widgets["latestTelem0Label"] = QLabel("<b>Battery Voltage</b>")
+        self.widgets["latestTelemBattVoltageLabel"] = QLabel("<b>Batt Voltage</b>")
+        self.widgets["latestTelemBattVoltageValue"] = QLabel("---")
+        self.widgets["latestTelemBattVoltageValue"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelemSatellitesLabel"] = QLabel("<b>Satellites</b>")
+        self.widgets["latestTelemSatellitesValue"] = QLabel("---")
+        self.widgets["latestTelemSatellitesValue"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        self.widgets["latestTelemTemperatureLabel"] = QLabel("<b>Temperature</b>")
+        self.widgets["latestTelemTemperatureValue"] = QLabel("---")
+        self.widgets["latestTelemTemperatureValue"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
+        
+        self.w5_telemetry.addWidget(self.widgets[f"latestTelemBattVoltageLabel"], 0, 0, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets[f"latestTelemBattVoltageValue"], 1, 0, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets[f"latestTelemSatellitesLabel"], 0, 1, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets[f"latestTelemSatellitesValue"], 1, 1, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets[f"latestTelemTemperatureLabel"], 0, 2, 1, 1)
+        self.w5_telemetry.addWidget(self.widgets[f"latestTelemTemperatureValue"], 1, 2, 1, 1)
+
+        self.widgets["latestTelem0Label"] = QLabel("<b>Ascent Rate</b>")
         self.widgets["latestTelem0Value"] = QLabel("---")
         self.widgets["latestTelem0Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
         self.widgets["latestTelem1Label"] = QLabel("<b>External Temperature</b>")
@@ -698,8 +715,8 @@ class MainWindow(QMainWindow):
             self.widgets[f"latestTelem{i}Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
 
         for i in range(0,9):
-            self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Label"], 0, i, 1, 1)
-            self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Value"], 1, i, 1, 1)
+            self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Label"], 0, i+3, 1, 1)
+            self.w5_telemetry.addWidget(self.widgets[f"latestTelem{i}Value"], 1, i+3, 1, 1)
 
         #self.w5_telemetry.setRowStretch(1, 6)
 
@@ -1199,6 +1216,13 @@ class MainWindow(QMainWindow):
                 self.widgets["latestPacketAltitudeValue"].setText(f"{_decoded['altitude']}")
 
                 # Update telemetry fields
+                if 'batteryvoltage' in _decoded:
+                    self.widgets["latestTelemBattVoltageValue"].setText(f"{_decoded['batteryvoltage']:.2f}")
+                if 'satellites' in _decoded:
+                    self.widgets["latestTelemSatellitesValue"].setText(f"{_decoded['satellites']}")
+                if 'temperature' in _decoded:
+                    self.widgets["latestTelemTemperatureValue"].setText(f"{_decoded['temperature']:.1f}")
+
                 if len(_decoded['custom_field_names']) > 0:
                     column = 0
                     for field in _decoded['custom_field_names']:
