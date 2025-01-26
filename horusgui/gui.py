@@ -68,6 +68,8 @@ if 'Windows' in platform.system():
 else:
     POSITION_LABEL_FONT_SIZE = 16
 
+PEN_WIDTH=1
+
 # Establish signals and worker for multi-threaded use
 class WorkerSignals(QObject):
     # finished = pyqtSignal()
@@ -172,7 +174,7 @@ class MainWindow(QMainWindow):
         self.widgets["audioDeviceLabel"] = QLabel("<b>Audio Device:</b>")
         self.widgets["audioDeviceSelector"] = QComboBox()
         # self.widgets["audioDeviceSelector"].setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
-        self.widgets["audioDeviceSelector"].setFixedWidth(225) # Dirty, but it needed to be done
+        self.widgets["audioDeviceSelector"].setFixedWidth(275) # Dirty, but it needed to be done
         self.widgets["audioDeviceSelector"].currentIndexChanged.connect(self.update_audio_sample_rates)
 
         self.widgets["audioSampleRateLabel"] = QLabel("<b>Sample Rate (Hz):</b>")
@@ -182,12 +184,12 @@ class MainWindow(QMainWindow):
         self.widgets["audioDbfsValue"] = QLabel("--")
         self.widgets["audioDbfsValue_float"] = 0.0
 
-        w1_audio.addWidget(self.widgets["audioDeviceLabel"], 0, 0, 1, 1)
-        w1_audio.addWidget(self.widgets["audioDeviceSelector"], 0, 1, 1, 2)
-        w1_audio.addWidget(self.widgets["audioSampleRateLabel"], 1, 0, 1, 1)
-        w1_audio.addWidget(self.widgets["audioSampleRateSelector"], 1, 1, 1, 2)
-        w1_audio.addWidget(self.widgets["audioDbfsLabel"], 2, 0, 1, 1)
-        w1_audio.addWidget(self.widgets["audioDbfsValue"], 2, 1, 1, 2)
+        w1_audio.addWidget(self.widgets["audioDeviceLabel"], 0, 0, 1, 3)
+        w1_audio.addWidget(self.widgets["audioDeviceSelector"], 1, 0, 1, 3)
+        w1_audio.addWidget(self.widgets["audioSampleRateLabel"], 2, 0, 1, 1)
+        w1_audio.addWidget(self.widgets["audioSampleRateSelector"], 2, 1, 1, 2)
+        w1_audio.addWidget(self.widgets["audioDbfsLabel"], 3, 0, 1, 1)
+        w1_audio.addWidget(self.widgets["audioDbfsValue"], 3, 1, 1, 2)
         w1_audio_groupbox.setLayout(w1_audio)
 
         # Modem Parameters
@@ -496,31 +498,31 @@ class MainWindow(QMainWindow):
         self.widgets["spectrumPlot"] = pg.PlotWidget(title="Spectra")
         self.widgets["spectrumPlot"].setLabel("left", "Power (dB)")
         self.widgets["spectrumPlot"].setLabel("bottom", "Frequency (Hz)")
-        self.widgets["spectrumPlotData"] = self.widgets["spectrumPlot"].plot([0], pen=pg.mkPen(width=2))
+        self.widgets["spectrumPlotData"] = self.widgets["spectrumPlot"].plot([0], pen=pg.mkPen(width=PEN_WIDTH))
 
         # Frequency Estiator Outputs
         self.widgets["estimatorLines"] = [
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F1",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F2",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F3",
                 labelOpts={'position':0.9}
             ),
             pg.InfiniteLine(
                 pos=-1000,
-                pen=pg.mkPen(color="w", width=3, style=QtCore.Qt.PenStyle.DashLine),
+                pen=pg.mkPen(color="w", width=(PEN_WIDTH + 1), style=QtCore.Qt.PenStyle.DashLine),
                 label="F4",
                 labelOpts={'position':0.9}
             ),
@@ -583,7 +585,7 @@ class MainWindow(QMainWindow):
         self.widgets["snrPlotRange"] = [-10, 30]
         self.widgets["snrPlotTime"] = np.array([])
         self.widgets["snrPlotSNR"] = np.array([])
-        self.widgets["snrPlotData"] = self.widgets["snrPlot"].plot(self.widgets["snrPlotTime"], self.widgets["snrPlotSNR"], pen=pg.mkPen(width=2))
+        self.widgets["snrPlotData"] = self.widgets["snrPlot"].plot(self.widgets["snrPlotTime"], self.widgets["snrPlotSNR"], pen=pg.mkPen(width=PEN_WIDTH))
         w3_snr.addWidget(self.widgets["snrPlot"])
 
         w3_snr_groupbox.setLayout(w3_snr)
@@ -970,9 +972,11 @@ class MainWindow(QMainWindow):
         _data = data["fft"]
         _dbfs = data["dbfs"]
 
-        _tc = 0.25
-        _plot_data = (self.widgets["spectrumPlotData"].getData()[1] * (1 - _tc) + (_data * _tc))
-        self.widgets["spectrumPlotData"].setData(_scale, _plot_data)
+        # _tc = 0.25
+        # _plot_data = (self.widgets["spectrumPlotData"].getData()[1] * (1 - _tc) + (_data * _tc))
+        # self.widgets["spectrumPlotData"].setData(_scale, _plot_data)
+
+        self.widgets["spectrumPlotData"].setData(_scale, _data)
 
         # Really basic IIR to smoothly adjust scale
         _old_max = self.widgets["spectrumPlotRange"][1]
