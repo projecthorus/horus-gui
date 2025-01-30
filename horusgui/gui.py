@@ -712,6 +712,8 @@ class MainWindow(QMainWindow):
         for i in range(4,9):
             self.widgets[f"latestTelem{i}Label"] = QLabel("")
             self.widgets[f"latestTelem{i}Value"] = QLabel("")
+            self.widgets[f"latestTelem{i}Label"].hide()
+            self.widgets[f"latestTelem{i}Value"].hide()
             self.widgets[f"latestTelem{i}Value"].setFont(QFont("Courier New", POSITION_LABEL_FONT_SIZE, QFont.Weight.Bold))
 
         for i in range(0,9):
@@ -1372,6 +1374,13 @@ class MainWindow(QMainWindow):
             self.widgets["latestPacketElevationValue"].setText("---")
             self.widgets["latestPacketBearingValue"].setText("---")
             self.widgets["latestPacketRangeValue"].setText("---")
+
+            self.widgets["latestTelemBattVoltageValue"].setText("---")
+            self.widgets["latestTelemSatellitesValue"].setText("---")
+            self.widgets["latestTelemTemperatureValue"].setText("---")
+            
+            for column in range(0,9):
+                self.widgets[f"latestTelem{column}Value"].setText(f"---")
 
             # Ensure the SondeHub upload is set correctly.
             self.sondehub_uploader.inhibit = not self.widgets["sondehubUploadSelector"].isChecked()
