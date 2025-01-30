@@ -34,9 +34,11 @@ default_config = {
     "rotator_type": "rotctld",
     "rotator_host": "localhost",
     "rotator_port": 4533,
+    "rotator_rangeinhibit": True,
     "logging_enabled": False,
     "log_format": "CSV",
     "log_directory": "",
+    "fft_smoothing": False,
     "payload_list": json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST),
     "custom_field_list": json.dumps({})
 }
@@ -76,7 +78,7 @@ def read_config(widgets):
     global qt_settings, default_config
 
     # This is getting a bit ridiculous, need to re-think this approach.
-    OK_VERSIONS = [__version__, '0.3.18', '0.3.17', '0.3.16', '0.3.15', '0.3.14', '0.3.13', '0.3.12', '0.3.11', '0.3.10', '0.3.9', '0.3.8', '0.3.7', '0.3.6', '0.3.5', '0.3.4', '0.3.1', '0.2.1']
+    OK_VERSIONS = [__version__,'0.3.19', '0.3.18', '0.3.17', '0.3.16', '0.3.15', '0.3.14', '0.3.13', '0.3.12', '0.3.11', '0.3.10', '0.3.9', '0.3.8', '0.3.7', '0.3.6', '0.3.5', '0.3.4', '0.3.1', '0.2.1']
     
     # Try and read in the version parameter from QSettings
     if qt_settings.value("version") not in OK_VERSIONS:
@@ -124,11 +126,14 @@ def read_config(widgets):
         widgets["rotatorTypeSelector"].setCurrentText(default_config["rotator_type"])
         widgets["rotatorHostEntry"].setText(str(default_config["rotator_host"]))
         widgets["rotatorPortEntry"].setText(str(default_config["rotator_port"]))
+        widgets["rotatorRangeInhibit"].setChecked(ValueToBool(default_config["rotator_rangeinhibit"]))
 
         # Logging Settings
         widgets["loggingPathEntry"].setText(str(default_config["log_directory"]))
         widgets["loggingFormatSelector"].setCurrentText(default_config["log_format"])
         widgets["enableLoggingSelector"].setChecked(ValueToBool(default_config["logging_enabled"]))
+
+        widgets["fftSmoothingSelector"].setChecked(ValueToBool(default_config["fft_smoothing"]))
 
         if default_config['baud_rate'] != -1:
             widgets["horusModemRateSelector"].setCurrentText(str(default_config['baud_rate']))
@@ -173,9 +178,11 @@ def save_config(widgets):
         default_config["rotator_type"] = widgets["rotatorTypeSelector"].currentText()
         default_config["rotator_host"] = widgets["rotatorHostEntry"].text()
         default_config["rotator_port"] = int(widgets["rotatorPortEntry"].text())
+        default_config["rotator_rangeinhibit"] = widgets["rotatorRangeInhibit"].isChecked()
         default_config["logging_enabled"] = widgets["enableLoggingSelector"].isChecked()
         default_config["log_directory"] = widgets["loggingPathEntry"].text()
         default_config["log_format"] = widgets["loggingFormatSelector"].currentText()
+        default_config["fft_smoothing"] = widgets["fftSmoothingSelector"].isChecked()
 
         default_config["payload_list"] = json.dumps(horusdemodlib.payloads.HORUS_PAYLOAD_LIST)
         default_config["custom_field_list"] = json.dumps(horusdemodlib.payloads.HORUS_CUSTOM_FIELDS)

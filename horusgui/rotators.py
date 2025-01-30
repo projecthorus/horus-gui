@@ -9,7 +9,7 @@ import socket
 import time
 import logging
 import traceback
-from threading import Thread
+# from threading import Thread
 
 class ROTCTLD(object):
     """ rotctld (hamlib) communication class """
@@ -112,11 +112,11 @@ class PSTRotator(object):
         self.poll_rate = poll_rate
         self.azel_thread_running = True
 
-        self.t_rx = Thread(target=self.azel_rx_loop)
-        self.t_rx.start()
+        # self.t_rx = Thread(target=self.azel_rx_loop)
+        # self.t_rx.start()
 
-        self.t_poll = Thread(target=self.azel_poll_loop)
-        self.t_poll.start()
+        # self.t_poll = Thread(target=self.azel_poll_loop)
+        # self.t_poll.start()
 
 
     def close(self):
@@ -157,13 +157,13 @@ class PSTRotator(object):
         except:
             pass
 
-    def azel_poll_loop(self):
+    def azel_poll_loop(self, info_callback=None):
         while self.azel_thread_running:
             self.poll_azel()
             logging.debug("Poll sent to PSTRotator.")
             time.sleep(self.poll_rate)
 
-    def azel_rx_loop(self):
+    def azel_rx_loop(self, info_callback=None):
         """ Listen for Azimuth and Elevation reports from PSTRotator"""
         s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         s.settimeout(1)
