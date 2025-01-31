@@ -1,4 +1,4 @@
-# Project Horus Telemetry Decoder
+# Project Horus Telemetry Decoder GUI
 
 Telemetry demodulator for the following modems in use by Project Horus
 * Horus Binary Modes (4FSK)
@@ -26,18 +26,14 @@ If you are having issues decoding telemetry from your payload, then carefully in
 Written by: 
 * Python Library - Mark Jessop <vk5qi@rfhead.net>
 * FSK Modem - [David Rowe](http://rowetel.com)
-* FSK Modem Python Wrapper - [XSSFox](https://twitter.com/xssfox)
+* FSK Modem Python Wrapper - [XSSFox](https://sprocketfox.io)
 
 ![Screenshot](doc/horusgui_screenshot.png)
 
 ### Known Issues
-* Occasional crash when processing is stopped just as a packet is being processed by horus_api.
-* Queue events not processed on OSX when the application is running in the background.
-* Python 3.10 not supported due to issue with PyAudio dependency.
+* Queue events not always processed on OSX when the application is running in the background.
 
 ### TODO LIST
-* Important Things
-  * Better build system via Travis (@xssfox)
 * Extras
   * Waterfall Display  (? Need something GPU accelerated if possible...)
 
