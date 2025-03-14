@@ -1561,12 +1561,12 @@ class MainWindow(QMainWindow):
                 
                 # Create worker thread for commanding rotator
                 worker = Worker(self.rotator.azel_rx_loop)
-                worker.signals.info.connect(self.info_callback)
+                #worker.signals.info.connect(self.info_callback)
                 self.threadpool.start(worker)
 
                 # Create worker thread for receiving info from rotator
                 worker = Worker(self.rotator.azel_poll_loop)
-                worker.signals.info.connect(self.info_callback)
+                #worker.signals.info.connect(self.info_callback)
                 self.threadpool.start(worker)
             else:
                 return
