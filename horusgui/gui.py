@@ -1239,6 +1239,7 @@ class MainWindow(QMainWindow):
                 else:
                     self.widgets["latestTelemTemperatureValue"].setText("---")
 
+                # Handle custom data from Horus V2 packets
                 if 'custom_field_names' in _decoded and len(_decoded['custom_field_names']) > 0:
                     column = 0
                     for field in _decoded['custom_field_names']:
@@ -1255,9 +1256,16 @@ class MainWindow(QMainWindow):
                     # Hide remaining columns
                     if column < 8:
                         for i in range(column, 9):
-                            self.widgets[f"latestTelem{column}Label"].hide()
-                            self.widgets[f"latestTelem{column}Value"].hide()
+                            self.widgets[f"latestTelem{i}Label"].hide()
+                            self.widgets[f"latestTelem{i}Value"].hide()
                             self.w5_telemetry.setColumnStretch((i + 3), 1)
+                
+                # Else hide unused (Horus V1) columns
+                else:
+                    for i in range(0, 9):
+                        self.widgets[f"latestTelem{i}Label"].hide()
+                        self.widgets[f"latestTelem{i}Value"].hide()
+                        self.w5_telemetry.setColumnStretch((i + 3), 1)
 
                 # Attempt to update the range/elevation/bearing fields.
                 try:

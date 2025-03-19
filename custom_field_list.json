@@ -1,0 +1,243 @@
+{
+"HORUSTEST": {
+    "struct": "<BbBfH",
+    "fields": [
+        ["cutdown_battery_voltage", "battery_5v_byte"],
+        ["external_temperature", "none"],
+        ["test_counter", "none"],
+        ["test_float_field", "none"],
+        ["test_int_field", "none"]
+    ]
+},
+"HORUSTEST2": {
+    "struct": "<BbBH4x",
+    "fields": [
+        ["cutdown_battery_voltage", "battery_5v_byte"],
+        ["external_temperature", "none"],
+        ["test_counter", "none"],
+        ["test_int_field", "none"]
+    ]
+},
+"4FSKTEST-V2": {
+    "comment": "Default custom fields for RS41ng",
+    "struct": "<hhBHxx",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"]
+    ]
+},
+"MAGNU-V2": {
+    "struct": "<hHhHb",
+    "fields": [
+        ["Vertical", "divide_by_100"],
+        ["Lateral", "divide_by_100"],
+        ["Orthogonal", "divide_by_100"],
+        ["Travel", "divide_by_100"],
+        ["Heading", "divide_by_100"]
+    ]
+},
+"HORUS-V2": {
+    "struct": "<hhBHxx",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"]
+    ]
+},
+"VK5BRL-V2": {
+    "struct": "<hhBHxx",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"]
+    ]
+},
+"ON4IR": {
+    "comment": "ON4IR - UBA/IRM balloon custom fields",
+    "struct": "<hhBHH",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+	["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"],
+        ["pulse_counts","none"]
+    ]
+},
+"HORUSRADMON": {
+    "comment": "Horus Radiation Monitor Payload, Photodiode",
+    "struct": "<hxxxxxH",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["pulse_counts","none"]
+    ]
+},
+"HORUSGEIGER": {
+    "comment": "Horus Radiation Monitor Payload, Geiger Counter",
+    "struct": "<hxxxxxH",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["pulse_counts","none"]
+    ]
+},
+"SHSSPGEIGER": {
+    "comment": "Horus Radiation Monitor Payload, Geiger Counter",
+    "struct": "<hxxxxxH",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["pulse_counts","none"]
+    ]
+},
+"OH3HAB-4FSK-V2": {
+    "comment": "OH3HAB custom fields with RadSens and BME280 sensors",
+    "struct": "<HhBHH",
+    "fields": [
+        ["radiation_intensity", "none"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"],
+        ["pulse_counts","none"]
+    ]
+},
+"AJ4XE": {
+    "comment": "custom fields for AJ4XE tracker",
+    "struct": "<HHBHH",
+    "fields": [
+        ["HDOP", "divide_by_100"],
+        ["VDOP", "divide_by_100"],
+        ["TTF", "none"],
+        ["PDOP", "divide_by_100"],
+        ["AVG_SNR", "divide_by_100"]
+    ]
+},
+"KD2EAT-DFM": {
+    "comment": "custom fields for KD2EAT DFM17 testing",
+    "struct": "<hhBHBx",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"],
+        ["mcu_calibration", "none"]
+    ]
+},
+"DF7PN": {
+    "comment": "private values see https://github.com/whallmann/RS41HUP_V2",
+    "struct": "<HHxxxxx",
+    "fields": [
+        ["flight_number", "none"],
+        ["sonde_type", "none"]
+    ]
+},
+"SP9SKP": {
+    "comment": "SKP telemetry",
+    "struct": "<BBBBBHH",
+    "fields": [
+        ["fix_voltage", "battery_5v_byte"],
+        ["io_voltage", "battery_5v_byte"],
+        ["reset_voltage", "battery_5v_byte"],
+        ["pv_voltage", "divide_by_100"],
+        ["time_to_fix", "none"],
+        ["uv_max", "none"],
+        ["uv_avg", "none"]
+    ]
+    },
+"SKPQKM": {
+        "comment": "SKPQKM telemetry",
+        "struct": "<BBBBBHH",
+        "fields": [
+            ["fix_voltage", "battery_5v_byte"],
+            ["io_voltage", "battery_5v_byte"],
+            ["reset_voltage", "battery_5v_byte"],
+            ["pv_voltage", "divide_by_100"],
+            ["time_to_fix", "none"],
+            ["uv_max", "none"],
+            ["uv_avg", "none"]
+        ]
+        },
+"OH3BHX": {
+    "comment": "OH3BHX custom fields with RadSens and BME280 sensors",
+    "struct": "<HhBHH",
+    "fields": [
+        ["radiation_intensity", "none"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"],
+        ["pulse_counts","none"]
+    ]
+},
+"SP9UOB-PICO1": {
+    "comment": "SP9UOB pico series custom fields",
+    "struct": "<HHbbHb",
+    "fields": [
+        ["vcc", "divide_by_100"],
+        ["solar", "divide_by_100"],
+        ["prefix1", "none"],
+        ["prefix2", "none"],
+        ["flags", "none"],
+        ["ttf", "none"]
+    ]
+},
+"NEVVMAN-1": {
+    "comment": "Nevvman's custom fw fields",
+    "struct": "<BBBhHH",
+    "fields": [
+        ["state", "none"],
+        ["add1", "none"],
+        ["add2", "divide_by_10"],
+        ["add3", "divide_by_10"],
+        ["add4", "divide_by_10"],
+        ["add5", "none"]
+    ]
+},
+"IRBE": {
+    "comment": "Default custom fields for IRBE",
+    "struct": "<HBBbbbH",
+    "fields": [
+        ["commands_received", "none"],
+        ["commands_succeeded", "none"],
+        ["commands_failed", "none"],
+        ["com_temp", "none"],
+        ["mcu_temp", "none"],
+        ["ext_temp", "none"],
+        ["device_status", "none"]
+    ]
+},
+"SP1ASH": {
+    "comment": "SP1ASH custom fields with BMP280 and AHT20 sensor values",
+    "struct": "<hbhHH",
+    "fields": [
+        ["aht_temperature", "divide_by_10"],
+        ["aht_humidity", "none"],
+        ["bmp_temperature", "divide_by_10"],
+        ["bmp_pressure", "divide_by_10"],
+        ["bmp_altitude", "none"]
+    ]
+},
+"KJ0RE": {
+    "comment": "Default custom fields for RS41ng-Mod",
+    "struct": "<hhBHBB",
+    "fields": [
+        ["ascent_rate", "divide_by_100"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"],
+        ["rp_xtal_code", "none"],
+        ["rp_lu", "none"]
+    ]
+},
+"K5PRK": {
+    "comment": "K5PRK custom fields with RadSens and BME280 sensors",
+    "struct": "<HhBHH",
+    "fields": [
+        ["radiation_intensity", "none"],
+        ["ext_temperature", "divide_by_10"],
+        ["ext_humidity", "none"],
+        ["ext_pressure", "divide_by_10"],
+        ["pulse_counts","none"]
+    ]
+}
+}
