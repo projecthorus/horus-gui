@@ -1239,7 +1239,7 @@ class MainWindow(QMainWindow):
                 else:
                     self.widgets["latestTelemTemperatureValue"].setText("---")
 
-                if len(_decoded['custom_field_names']) > 0:
+                if 'custom_field_names' in _decoded and len(_decoded['custom_field_names']) > 0:
                     column = 0
                     for field in _decoded['custom_field_names']:
                         field_nice = field.replace('_', ' ').title()
