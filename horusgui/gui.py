@@ -1239,7 +1239,8 @@ class MainWindow(QMainWindow):
                 else:
                     self.widgets["latestTelemTemperatureValue"].setText("---")
 
-                if len(_decoded['custom_field_names']) > 0:
+                # Handle custom data from Horus V2 packets
+                if 'custom_field_names' in _decoded and len(_decoded['custom_field_names']) > 0:
                     column = 0
                     for field in _decoded['custom_field_names']:
                         field_nice = field.replace('_', ' ').title()
@@ -1255,9 +1256,16 @@ class MainWindow(QMainWindow):
                     # Hide remaining columns
                     if column < 8:
                         for i in range(column, 9):
-                            self.widgets[f"latestTelem{column}Label"].hide()
-                            self.widgets[f"latestTelem{column}Value"].hide()
+                            self.widgets[f"latestTelem{i}Label"].hide()
+                            self.widgets[f"latestTelem{i}Value"].hide()
                             self.w5_telemetry.setColumnStretch((i + 3), 1)
+                
+                # Else hide unused (Horus V1) columns
+                else:
+                    for i in range(0, 9):
+                        self.widgets[f"latestTelem{i}Label"].hide()
+                        self.widgets[f"latestTelem{i}Value"].hide()
+                        self.w5_telemetry.setColumnStretch((i + 3), 1)
 
                 # Attempt to update the range/elevation/bearing fields.
                 try:
@@ -1561,12 +1569,12 @@ class MainWindow(QMainWindow):
                 
                 # Create worker thread for commanding rotator
                 worker = Worker(self.rotator.azel_rx_loop)
-                worker.signals.info.connect(self.info_callback)
+                #worker.signals.info.connect(self.info_callback)
                 self.threadpool.start(worker)
 
                 # Create worker thread for receiving info from rotator
                 worker = Worker(self.rotator.azel_poll_loop)
-                worker.signals.info.connect(self.info_callback)
+                #worker.signals.info.connect(self.info_callback)
                 self.threadpool.start(worker)
             else:
                 return
