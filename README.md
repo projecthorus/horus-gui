@@ -109,7 +109,7 @@ developer to make changes to the source code while retaining the installation
 entry points so it can be used like a normal install.
 
 ```console
-(venv) $ pip install -e .
+(venv) $ pip install .
 ```
 
 ### Run
