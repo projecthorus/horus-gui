@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
         bg_color = palette.color(QPalette.ColorRole.Window)
         fg_color   = palette.color(QPalette.ColorRole.WindowText)
         axis_color = palette.color(QPalette.ColorRole.Text)
-        marker_color = palette.color(QPalette.ColorRole.Mid)
+        marker_color = palette.color(QPalette.ColorRole.PlaceholderText)
         pg.setConfigOption('background', bg_color)
         pg.setConfigOption('foreground', fg_color)
 
@@ -389,7 +389,7 @@ class MainWindow(QMainWindow):
         )
         self.widgets["fftSmoothingLabel"] = QLabel("<b>Enable FFT smoothing:</b>")
         self.widgets["fftSmoothingSelector"] = QCheckBox()
-        self.widgets["fftSmoothingSelector"].setChecked(False)
+        self.widgets["fftSmoothingSelector"].setChecked(True)
         self.widgets["fftSmoothingSelector"].setToolTip(
             "Enable IIR filter on FFT with tc=0.25."
         )
