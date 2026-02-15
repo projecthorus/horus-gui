@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+export DEB_HOST_MULTIARCH
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+export DEB_HOST_ARCH
+export PYBUILD_NAME=horus-gui
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_install:
+	install -d debian/$(PYBUILD_NAME)/usr/bin
+	echo "python3 -m horusgui.gui" > debian/$(PYBUILD_NAME)/usr/bin/horus-gui
+	dh_auto_install
+

@@ -1,0 +1,35 @@
+Source: horus-gui
+Section: hamradio
+Priority: optional
+Maintainer: Mark Jessop <vk5qi@rfhead.net>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper (>= 11.0.0),
+ dh-python,
+ python3-dev,
+ pybuild-plugin-pyproject,
+ python3-poetry-core,
+Standards-Version: 4.5.0
+Homepage: https://github.com/projecthorus/horus-gui
+
+Package: horus-gui
+Architecture: any
+Depends: 
+ ${misc:Depends},
+ ${python3:Depends},
+ libportaudio2,
+ python3-crcmod,
+ python3-dateutil,
+ python3-horusdemodlib,
+ python3-numpy,
+ python3-pyaudio,
+ python3-requests,
+Description: Project Horus Telemetry Decoder GUI
+ Telemetry demodulator for the following modems in use by Project Horus
+  - Horus Binary Modes (4FSK)
+      v1 - Legacy 22 byte mode, Golay(23,12) FEC
+      v2 - 32-byte mode, Golay(23,12) FEC
+  - RTTY (7N1, 7N2 and 8N2, standard UKHAS sentences with CRC16 only)
+ This package includes:
+  - horus-gui: graphical front-end to horusdemodlib
+

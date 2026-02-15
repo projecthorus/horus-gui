@@ -1,0 +1,17 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: horus-gui
+Upstream-Contact: Mark Jessop <vk5qi@rfhead.net>
+Source: https://github.com/projecthorus/horus-gui
+
+Files: *
+Copyright: 2019-2025 Mark Jessop <vk5qi@rfhead.net>
+           FSK Modem - David Rowe
+           FSK Modem Python Wrapper - XSSFox
+License: GPL-3+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; version 3 dated June, 2007, or (at
+ your option) any later version.
+ .
+ On Debian systems, the complete text of version 3 of the GNU General
+ Public License can be found in '/usr/share/common-licenses/GPL-3'.
